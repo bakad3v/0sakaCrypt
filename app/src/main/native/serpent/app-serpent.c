@@ -8,6 +8,7 @@
 //#include <android/log.h>
 
 #include <block_cipher.h>
+#include <string.h>
 #include "serpent.h"
 
 #define SERPENT_SHEDULED_KEY_SIZE 140*4

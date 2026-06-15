@@ -14,6 +14,7 @@ import android.os.SystemClock;
 
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.ServiceCompat;
+import androidx.core.content.ContextCompat;
 
 import com.igeltech.nevercrypt.android.Logger;
 import com.igeltech.nevercrypt.android.R;
@@ -57,7 +58,7 @@ public class LocationsServiceBase extends Service
         triggerTime += SystemClock.elapsedRealtime();
         Intent i = new Intent(ACTION_CHECK_INACTIVE_LOCATION);
         i.putExtra(LocationsManager.PARAM_LOCATION_URI, loc.getLocationUri());
-        PendingIntent pi = PendingIntent.getBroadcast(context, loc.getId().hashCode(), i, PendingIntent.FLAG_ONE_SHOT);
+        PendingIntent pi = PendingIntent.getBroadcast(context, loc.getId().hashCode(), i, PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE);
         LocationsService.setCheckTimer(context, pi, triggerTime);
     }
 
@@ -85,9 +86,9 @@ public class LocationsServiceBase extends Service
                 }
             };
             registerReceiver(_shutdownReceiver, new IntentFilter(Intent.ACTION_SHUTDOWN));
-            registerReceiver(_shutdownReceiver, new IntentFilter("android.intent.action.QUICKBOOT_POWEROFF"));
+            ContextCompat.registerReceiver(this,_shutdownReceiver, new IntentFilter("android.intent.action.QUICKBOOT_POWEROFF"), ContextCompat.RECEIVER_EXPORTED);
             _inactivityCheckReceiver = new InactivityCheckReceiver();
-            registerReceiver(_inactivityCheckReceiver, new IntentFilter(ACTION_CHECK_INACTIVE_LOCATION));
+            ContextCompat.registerReceiver(this,_inactivityCheckReceiver, new IntentFilter(ACTION_CHECK_INACTIVE_LOCATION), ContextCompat.RECEIVER_EXPORTED);
         }
         catch (Exception e)
         {
@@ -162,7 +163,7 @@ public class LocationsServiceBase extends Service
     {
         Intent i = new Intent(this, LocationManagerActivity.class);
         i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CompatHelper.getServiceRunningNotificationsChannelId(this)).setContentTitle(getString(R.string.app_service_is_running)).setSmallIcon(R.drawable.ic_notification_new).setContentText("").setContentIntent(PendingIntent.getActivity(this, 0, i, 0)).setOngoing(true).addAction(R.drawable.ic_action_cancel, getString(R.string.close_all_containers), PendingIntent.getActivity(this, 0, new Intent(this, CloseLocationsActivity.class), PendingIntent.FLAG_UPDATE_CURRENT));
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CompatHelper.getServiceRunningNotificationsChannelId(this)).setContentTitle(getString(R.string.app_service_is_running)).setSmallIcon(R.drawable.ic_notification_new).setContentText("").setContentIntent(PendingIntent.getActivity(this, 0, i, PendingIntent.FLAG_IMMUTABLE)).setOngoing(true).addAction(R.drawable.ic_action_cancel, getString(R.string.close_all_containers), PendingIntent.getActivity(this, 0, new Intent(this, CloseLocationsActivity.class), PendingIntent.FLAG_UPDATE_CURRENT));
         Notification n = builder.build();
         n.flags |= Notification.FLAG_NO_CLEAR | Notification.FLAG_FOREGROUND_SERVICE;
         return n;

@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    package="com.igeltech.nevercrypt.android">
+    xmlns:tools="http://schemas.android.com/tools">
 
     <supports-screens android:anyDensity="true" />
 
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
 
     <application
         android:name="com.igeltech.nevercrypt.android.CryptoApplication"
@@ -109,8 +109,8 @@
             android:label="@string/settings"
             android:windowSoftInputMode="adjustPan" />
 
-        <service android:name=".service.FileOpsService" />
-        <service android:name=".service.LocationsService" />
+        <service android:name=".service.FileOpsService" android:foregroundServiceType="dataSync"/>
+        <service android:name=".service.LocationsService" android:foregroundServiceType="dataSync"/>
 
         <receiver
             android:name=".widgets.LocationShortcutWidget"

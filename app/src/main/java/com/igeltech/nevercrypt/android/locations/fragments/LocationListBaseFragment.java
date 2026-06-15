@@ -18,6 +18,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.view.ActionMode;
 import androidx.appcompat.widget.AppCompatImageView;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.ListFragment;
 import androidx.navigation.Navigation;
@@ -84,9 +85,9 @@ public abstract class LocationListBaseFragment extends ListFragment
     public void onResume()
     {
         super.onResume();
-        getActivity().registerReceiver(_reloadLocationsReceiver, new IntentFilter(LocationsManager.BROADCAST_LOCATION_CHANGED));
-        getActivity().registerReceiver(_reloadLocationsReceiver, new IntentFilter(LocationsManager.BROADCAST_LOCATION_REMOVED));
-        getActivity().registerReceiver(_reloadLocationsReceiver, new IntentFilter(LocationsManager.BROADCAST_LOCATION_CREATED));
+        ContextCompat.registerReceiver(getActivity(), _reloadLocationsReceiver, new IntentFilter(LocationsManager.BROADCAST_LOCATION_CHANGED), ContextCompat.RECEIVER_EXPORTED);
+        ContextCompat.registerReceiver(getActivity(), _reloadLocationsReceiver, new IntentFilter(LocationsManager.BROADCAST_LOCATION_REMOVED), ContextCompat.RECEIVER_EXPORTED);
+        ContextCompat.registerReceiver(getActivity(), _reloadLocationsReceiver, new IntentFilter(LocationsManager.BROADCAST_LOCATION_CREATED), ContextCompat.RECEIVER_EXPORTED);
         loadLocations();
     }
 

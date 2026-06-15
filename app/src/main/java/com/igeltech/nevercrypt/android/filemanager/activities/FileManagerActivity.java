@@ -7,6 +7,7 @@ import android.content.IntentFilter;
 import android.os.Bundle;
 
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.navigation.Navigation;
 
 import com.igeltech.nevercrypt.android.Logger;
@@ -51,7 +52,7 @@ public class FileManagerActivity extends RxAppCompatActivity
     {
         super.onStart();
         // Broadcasts
-        registerReceiver(_closeAllReceiver, new IntentFilter(LocationsManager.BROADCAST_ALL_CONTAINERS_CLOSED));
+        ContextCompat.registerReceiver(this, _closeAllReceiver, new IntentFilter(LocationsManager.BROADCAST_ALL_CONTAINERS_CLOSED), ContextCompat.RECEIVER_EXPORTED);
         Logger.debug("FileManagerFragment has started");
     }
 

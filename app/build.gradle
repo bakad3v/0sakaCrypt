@@ -1,15 +1,16 @@
 plugins {
     id 'com.android.application'
     id 'androidx.navigation.safeargs' apply(true)
+    id 'org.jetbrains.kotlin.android'
 }
 
 android {
-    compileSdkVersion 33
+    compileSdkVersion 37
 
     defaultConfig {
-        applicationId 'com.igeltech.nevercrypt'
-        minSdkVersion 21
-        targetSdkVersion 33
+        applicationId 'com.bakad3v.osakacrypt'
+        minSdkVersion 23
+        targetSdkVersion 37
         versionCode 1
         versionName "1.0"
 
@@ -22,7 +23,7 @@ android {
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
 
         proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-
+        android.buildFeatures.buildConfig = true
         externalNativeBuild {
             cmake {
                 targets "cryptxts", "cryptctr", "cryptaes", "cryptserpent", "crypttwofish", "cryptripemd160", "cryptwhirlpool", "fdraio", "localxts", "cryptcfb", "cryptcbc", "cryptctr", "cryptgost",
@@ -69,6 +70,10 @@ android {
         sourceCompatibility JavaVersion.VERSION_11
         targetCompatibility JavaVersion.VERSION_11
     }
+    kotlinOptions {
+        jvmTarget = '11'
+    }
+    namespace 'com.igeltech.nevercrypt.android'
 }
 
 dependencies {
@@ -85,4 +90,5 @@ dependencies {
     implementation 'com.trello.rxlifecycle3:rxlifecycle:3.1.0'
     implementation 'com.trello.rxlifecycle3:rxlifecycle-android:3.1.0'
     implementation 'com.trello.rxlifecycle3:rxlifecycle-components:3.1.0'
+    implementation 'androidx.core:core-ktx:1.19.0'
 }
