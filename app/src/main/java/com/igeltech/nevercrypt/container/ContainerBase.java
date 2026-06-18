@@ -92,12 +92,31 @@ public abstract class ContainerBase implements Closeable
         {
             if (_containerFormat == null)
             {
-                if (tryLayout(t, password, false) || tryLayout(t, password, true))
+                if (tryLayoutsByHash(t, password))
                     return;
             }
             else
             {
-                if (tryLayout(_containerFormat, t, password, false) || tryLayout(_containerFormat, t, password, true))
+                if (tryLayoutByHash(_containerFormat, t, password))
+                    return;
+            }
+        }
+        throw new WrongFileFormatException();
+    }
+
+    public synchronized void open(byte[] password, boolean isHidden) throws IOException, ApplicationException
+    {
+        Logger.debug("Opening container at " + _pathToContainer.getPathString());
+        try (RandomAccessIO t = openFile())
+        {
+            if (_containerFormat == null)
+            {
+                if (tryLayout(t, password, isHidden))
+                    return;
+            }
+            else
+            {
+                if (tryLayout(_containerFormat, t, password, isHidden))
                     return;
             }
         }
@@ -218,6 +237,11 @@ public abstract class ContainerBase implements Closeable
 
     protected boolean tryLayout(ContainerFormatInfo cf, RandomAccessIO containerFile, byte[] password, boolean isHidden) throws IOException, ApplicationException
     {
+        return tryLayout(cf, containerFile, password, isHidden, _messageDigest);
+    }
+
+    protected boolean tryLayout(ContainerFormatInfo cf, RandomAccessIO containerFile, byte[] password, boolean isHidden, MessageDigest hashFunc) throws IOException, ApplicationException
+    {
         if (isHidden && !cf.hasHiddenContainerSupport())
             return false;
         Logger.debug(String.format("Trying %s container format%s", cf.getFormatName(), isHidden ? " (hidden)" : ""));
@@ -230,8 +254,8 @@ public abstract class ContainerBase implements Closeable
         vl.setOpeningProgressReporter(_progressReporter);
         if (_encryptionEngine != null)
             vl.setEngine(_encryptionEngine);
-        if (_messageDigest != null)
-            vl.setHashFunc(_messageDigest);
+        if (hashFunc != null)
+            vl.setHashFunc(hashFunc);
         vl.setPassword(cutPassword(password, cf.getMaxPasswordLength()));
         if (cf.hasCustomKDFIterationsSupport() && _numKDFIterations > 0)
             vl.setNumKDFIterations(_numKDFIterations);
@@ -241,18 +265,36 @@ public abstract class ContainerBase implements Closeable
             _layout = vl;
             return true;
         }
-        else if (isHidden && (_encryptionEngine != null || _messageDigest != null))
-        {
-            vl.setEngine(null);
-            vl.setHashFunc(null);
-            if (vl.readHeader(containerFile))
-            {
-                _containerFormat = cf;
-                _layout = vl;
-                return true;
-            }
-        }
         vl.close();
+        return false;
+    }
+
+    protected boolean tryLayoutsByHash(RandomAccessIO containerFile, byte[] password) throws IOException, ApplicationException
+    {
+        List<ContainerFormatInfo> cfs = getFormats();
+        if (cfs.size() > 1)
+            Collections.sort(cfs, (lhs, rhs) -> Integer.compare(lhs.getOpeningPriority(), rhs.getOpeningPriority()));
+        for (ContainerFormatInfo cf : cfs)
+        {
+            //Don't try too slow container formats
+            if (cf.getOpeningPriority() < 0)
+                continue;
+            if (tryLayoutByHash(cf, containerFile, password))
+                return true;
+        }
+        return false;
+    }
+
+    protected boolean tryLayoutByHash(ContainerFormatInfo cf, RandomAccessIO containerFile, byte[] password) throws IOException, ApplicationException
+    {
+        if (_messageDigest != null)
+            return tryLayout(cf, containerFile, password, false, _messageDigest)
+                    || tryLayout(cf, containerFile, password, true, _messageDigest);
+        VolumeLayout vl = cf.getVolumeLayout();
+        for (MessageDigest hashFunc : vl.getSupportedHashFuncs())
+            if (tryLayout(cf, containerFile, password, false, hashFunc)
+                    || tryLayout(cf, containerFile, password, true, hashFunc))
+                return true;
         return false;
     }
 
@@ -273,6 +315,3 @@ public abstract class ContainerBase implements Closeable
         return _pathToContainer instanceof StdFsPath && _layout.getEngine() instanceof XTS && _pathToContainer.getFileSystem() instanceof StdFs && ((StdFs) _pathToContainer.getFileSystem()).getRootDir().isEmpty();
     }
 }
-
-
-
