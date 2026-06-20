@@ -53,12 +53,17 @@ public class PropertiesView extends LinearLayout
 
     public static PropertyEditor.Host getHost(Fragment f)
     {
-        final PropertyEditor.Host host;
-        if (f.getArguments().containsKey(PropertyEditor.ARG_HOST_FRAGMENT_TAG))
-            host = (PropertyEditor.Host) f.getFragmentManager().findFragmentByTag(f.getArguments().getString(PropertyEditor.ARG_HOST_FRAGMENT_TAG));
-        else
-            host = (PropertyEditor.Host) f.getActivity();
-        return host;
+        Bundle args = f.getArguments();
+        if (args != null && args.containsKey(PropertyEditor.ARG_HOST_FRAGMENT_TAG))
+        {
+            String tag = args.getString(PropertyEditor.ARG_HOST_FRAGMENT_TAG);
+            Fragment host = f.getParentFragmentManager().findFragmentByTag(tag);
+            if (host == null && f.getFragmentManager() != null)
+                host = f.getFragmentManager().findFragmentByTag(tag);
+            if (host != null)
+                return (PropertyEditor.Host) host;
+        }
+        return (PropertyEditor.Host) f.getActivity();
     }
 
     public static PropertyEditor getProperty(Fragment f)

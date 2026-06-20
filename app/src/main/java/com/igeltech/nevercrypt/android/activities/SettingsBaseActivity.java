@@ -2,6 +2,7 @@ package com.igeltech.nevercrypt.android.activities;
 
 import android.os.Bundle;
 
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 
@@ -16,13 +17,21 @@ public abstract class SettingsBaseActivity extends AppCompatActivity
     public void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        int layoutResId = getSettingsLayoutResId();
+        if (layoutResId != 0)
+        {
+            setContentView(layoutResId);
+            onSettingsContentViewCreated();
+        }
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null)
+            actionBar.setDisplayHomeAsUpEnabled(true);
         if (UserSettings.getSettings(this).isFlagSecureEnabled())
             CompatHelper.setWindowFlagSecure(this);
         if (savedInstanceState == null)
             getSupportFragmentManager().
                     beginTransaction().
-                    add(android.R.id.content, getSettingsFragment(), SETTINGS_FRAGMENT_TAG).
+                    add(getSettingsContainerId(), getSettingsFragment(), SETTINGS_FRAGMENT_TAG).
                     commit();
     }
 
@@ -34,4 +43,18 @@ public abstract class SettingsBaseActivity extends AppCompatActivity
     }
 
     protected abstract Fragment getSettingsFragment();
+
+    protected int getSettingsLayoutResId()
+    {
+        return 0;
+    }
+
+    protected int getSettingsContainerId()
+    {
+        return android.R.id.content;
+    }
+
+    protected void onSettingsContentViewCreated()
+    {
+    }
 }

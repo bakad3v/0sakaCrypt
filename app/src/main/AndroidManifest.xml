@@ -107,6 +107,7 @@
         <activity
             android:name=".settings.activities.OpeningOptionsActivity"
             android:label="@string/settings"
+            android:theme="@style/Theme.Default.NoActionBar"
             android:windowSoftInputMode="adjustPan" />
 
         <service android:name=".service.FileOpsService" android:foregroundServiceType="dataSync"/>

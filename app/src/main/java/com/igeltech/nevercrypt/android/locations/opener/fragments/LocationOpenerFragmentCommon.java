@@ -78,7 +78,7 @@ public class LocationOpenerFragmentCommon extends LocationOpenerBaseFragment imp
                     args.putParcelable(Openable.PARAM_PASSWORD, new SecureBuffer(val.toCharArray()));
             }
             if (defaultArgs.containsKey(Openable.PARAM_KDF_ITERATIONS) && !args.containsKey(Openable.PARAM_KDF_ITERATIONS))
-                args.putInt(Openable.PARAM_KDF_ITERATIONS, args.getInt(Openable.PARAM_KDF_ITERATIONS));
+                args.putInt(Openable.PARAM_KDF_ITERATIONS, defaultArgs.getInt(Openable.PARAM_KDF_ITERATIONS));
         }
         return args;
     }
