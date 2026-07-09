@@ -9,7 +9,7 @@ import androidx.fragment.app.Fragment;
 import com.igeltech.nevercrypt.android.helpers.CompatHelper;
 import com.igeltech.nevercrypt.android.settings.UserSettings;
 
-public abstract class SettingsBaseActivity extends AppCompatActivity
+public abstract class SettingsBaseActivity extends AppCompatActivity implements EdgeToEdgeToolbarActivity
 {
     public static final String SETTINGS_FRAGMENT_TAG = "com.igeltech.nevercrypt.android.locations.SETTINGS_FRAGMENT";
 
@@ -17,12 +17,7 @@ public abstract class SettingsBaseActivity extends AppCompatActivity
     public void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-        int layoutResId = getSettingsLayoutResId();
-        if (layoutResId != 0)
-        {
-            setContentView(layoutResId);
-            onSettingsContentViewCreated();
-        }
+        setEdgeToEdgeContentView(getSettingsContentLayoutResId());
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null)
             actionBar.setDisplayHomeAsUpEnabled(true);
@@ -31,7 +26,7 @@ public abstract class SettingsBaseActivity extends AppCompatActivity
         if (savedInstanceState == null)
             getSupportFragmentManager().
                     beginTransaction().
-                    add(getSettingsContainerId(), getSettingsFragment(), SETTINGS_FRAGMENT_TAG).
+                    add(getEdgeToEdgeContentId(), getSettingsFragment(), SETTINGS_FRAGMENT_TAG).
                     commit();
     }
 
@@ -44,17 +39,8 @@ public abstract class SettingsBaseActivity extends AppCompatActivity
 
     protected abstract Fragment getSettingsFragment();
 
-    protected int getSettingsLayoutResId()
+    protected int getSettingsContentLayoutResId()
     {
         return 0;
-    }
-
-    protected int getSettingsContainerId()
-    {
-        return android.R.id.content;
-    }
-
-    protected void onSettingsContentViewCreated()
-    {
     }
 }

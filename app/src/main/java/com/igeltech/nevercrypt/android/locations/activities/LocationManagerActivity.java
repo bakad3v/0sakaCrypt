@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.view.ContextMenu;
 import android.view.View;
@@ -18,6 +17,7 @@ import androidx.navigation.ui.NavigationUI;
 
 import com.igeltech.nevercrypt.android.Logger;
 import com.igeltech.nevercrypt.android.R;
+import com.igeltech.nevercrypt.android.activities.EdgeToEdgeToolbarActivity;
 import com.igeltech.nevercrypt.android.filemanager.tasks.CheckStartPathTask;
 import com.igeltech.nevercrypt.android.helpers.AppInitHelper;
 import com.igeltech.nevercrypt.android.helpers.CompatHelper;
@@ -27,7 +27,7 @@ import com.trello.rxlifecycle3.components.support.RxAppCompatActivity;
 
 import java.util.concurrent.CancellationException;
 
-public class LocationManagerActivity extends RxAppCompatActivity
+public class LocationManagerActivity extends RxAppCompatActivity implements EdgeToEdgeToolbarActivity
 {
     public static final String TAG = "LocationManagerActivity";
     protected static final String FOLDER_MIME_TYPE = "resource/folder";
@@ -47,7 +47,7 @@ public class LocationManagerActivity extends RxAppCompatActivity
     public void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_locationmanager);
+        setEdgeToEdgeContentView(R.layout.content_locationmanager);
         // Widget setup
         NavController navController = Navigation.findNavController(this, R.id.nav_host_locationmanager);
         appBarConfiguration = new AppBarConfiguration.Builder(navController.getGraph()).build();

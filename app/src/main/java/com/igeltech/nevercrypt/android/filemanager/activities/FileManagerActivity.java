@@ -10,13 +10,14 @@ import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.navigation.Navigation;
 
+import com.igeltech.nevercrypt.android.activities.EdgeToEdgeToolbarActivity;
 import com.igeltech.nevercrypt.android.Logger;
 import com.igeltech.nevercrypt.android.R;
 import com.igeltech.nevercrypt.android.dialogs.AskOverwriteDialog;
 import com.igeltech.nevercrypt.locations.LocationsManager;
 import com.trello.rxlifecycle3.components.support.RxAppCompatActivity;
 
-public class FileManagerActivity extends RxAppCompatActivity
+public class FileManagerActivity extends RxAppCompatActivity implements EdgeToEdgeToolbarActivity
 {
     public static final String ACTION_ASK_OVERWRITE = "com.igeltech.nevercrypt.android.ACTION_ASK_OVERWRITE";
     public static final String EXTRA_ALLOW_MULTIPLE = Intent.EXTRA_ALLOW_MULTIPLE;
@@ -39,7 +40,7 @@ public class FileManagerActivity extends RxAppCompatActivity
     protected void onCreate(@Nullable Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_filemanager);
+        setEdgeToEdgeContentView(R.layout.content_filemanager);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         Logger.debug("fm start activity: " + getIntent());
         checkAction();
