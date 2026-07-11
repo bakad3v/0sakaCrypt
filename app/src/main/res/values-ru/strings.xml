@@ -146,6 +146,7 @@
     <string name="disable">Отключить</string>
     <string name="copy_here">Скопировать сюда</string>
     <string name="move_here">Переместить сюда</string>
+    <string name="import_file">Импортировать файл</string>
     <string name="number_of_kdf_iterations_veracrypt_descr">Множитель количества итераций PBKDF2 (PIM). Чем больше значение, тем дольше будет открываться контейнер. Введите 0, чтобы использовать значение по умолчанию. Подробности можно узнать, пройдя по ссылке https://veracrypt.codeplex.com/wikipage?title=Personal%20Iterations%20Multiplier%20(PIM)</string>
     <string name="kdf_iterations_multiplier">Количество итераций при генерировании ключа (PIM)</string>
     <string name="container_format_is">&lt;p&gt;Формат контейнера: &lt;b&gt;%1$s&lt;/b&gt;.&lt;/p&gt;</string>

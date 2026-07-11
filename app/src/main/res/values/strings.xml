@@ -154,6 +154,7 @@
     <string name="disable">Disable</string>
     <string name="copy_here">Copy here</string>
     <string name="move_here">Move here</string>
+    <string name="import_file">Import file</string>
     <string name="number_of_kdf_iterations_veracrypt_descr">Enter the <xliff:g id="key_derivation_function">KDF</xliff:g> iterations multiplier (<xliff:g id="pim">PIM</xliff:g>). The greater value you choose the longer it will take to open the container. Enter 0 to use the default value. Check <xliff:g id="url">https://veracrypt.codeplex.com/wikipage?title=Personal%20Iterations%20Multiplier%20(PIM)</xliff:g> for details.</string>
     <string name="kdf_iterations_multiplier"><xliff:g id="key_derivation_function">KDF</xliff:g> iterations multiplier (<xliff:g id="pim">PIM</xliff:g>)</string>
     <string name="container_format_is"><xliff:g id="formatting">&lt;p&gt;</xliff:g>Container format is <xliff:g id="formatting">&lt;b&gt;</xliff:g><xliff:g example="VeraCrypt" id="container_format">%1$s</xliff:g><xliff:g id="formatting">&lt;/b&gt;</xliff:g>.<xliff:g id="formatting">&lt;/p&gt;</xliff:g></string>

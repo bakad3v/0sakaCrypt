@@ -3,6 +3,7 @@ package com.igeltech.nevercrypt.android.filemanager.fragments;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -12,6 +13,7 @@ import android.view.ViewGroup;
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
@@ -24,6 +26,7 @@ import com.igeltech.nevercrypt.android.filemanager.records.BrowserRecord;
 import com.igeltech.nevercrypt.android.fragments.TaskFragment;
 import com.igeltech.nevercrypt.android.helpers.CachedPathInfo;
 import com.igeltech.nevercrypt.android.helpers.ProgressDialogTaskFragmentCallbacks;
+import com.igeltech.nevercrypt.android.service.FileOpsService;
 import com.igeltech.nevercrypt.android.settings.UserSettings;
 import com.igeltech.nevercrypt.fs.Path;
 import com.igeltech.nevercrypt.fs.util.SrcDstCollection;
@@ -161,6 +164,7 @@ public class FileManagerFragment extends RxFragment implements PreviewFragment.H
     public void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
+        ContextCompat.registerReceiver(requireContext().getApplicationContext(), _updatePathReceiver, new IntentFilter(FileOpsService.BROADCAST_FILE_OPERATION_COMPLETED), ContextCompat.RECEIVER_EXPORTED);
         _isLargeScreenLayout = !UserSettings.getSettings(getContext()).disableLargeSceenLayouts() && getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE;
         // Get arguments passed by NavController
         _args = FileManagerFragmentArgs.fromBundle(requireArguments());

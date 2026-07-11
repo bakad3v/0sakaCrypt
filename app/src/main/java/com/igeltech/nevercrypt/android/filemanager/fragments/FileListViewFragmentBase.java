@@ -1,5 +1,6 @@
 package com.igeltech.nevercrypt.android.filemanager.fragments;
 
+import android.content.ActivityNotFoundException;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
@@ -85,6 +86,7 @@ public abstract class FileListViewFragmentBase extends RxAppCompatDialogFragment
     public static final String TAG = "com.igeltech.nevercrypt.android.filemanager.fragments.FileListViewFragment";
     public static final String ARG_SCROLL_POSITION = "com.igeltech.nevercrypt.android.SCROLL_POSITION";
     public static final String ARG_WIPE_FILES = "com.igeltech.nevercrypt.android.WIPE_FILES";
+    private static final int REQUEST_IMPORT_FILE = 1002;
     public static Subject<Boolean> TEST_READING_OBSERVABLE;
 
     static
@@ -272,6 +274,7 @@ public abstract class FileListViewFragmentBase extends RxAppCompatDialogFragment
         menu.findItem(R.id.progressbar).setVisible(isReading);
         menu.findItem(R.id.copy).setVisible(!isReading && !isSelectAction && (isSendAction || hasInClipboard));
         menu.findItem(R.id.move).setVisible(!isReading && !isSelectAction && hasInClipboard);
+        menu.findItem(R.id.import_file).setVisible(!isReading && !isSendAction && !isSelectAction && !isReadOnly);
         menu.setGroupVisible(R.id.new_file_group, !isReadOnly);
         menu.findItem(R.id.new_file).setVisible(!isReading && !isSendAction && allowCreateNewFile() && (!isSelectAction || getFileManagerFragment().allowFileSelect()));
         menu.findItem(R.id.new_dir).setVisible(!isReading && allowCreateNewFolder());
@@ -305,6 +308,18 @@ public abstract class FileListViewFragmentBase extends RxAppCompatDialogFragment
         }
         _cleanSelectionOnModeFinish = true;
         ExtendedFileInfoLoader.getInstance().resumeViewUpdate();
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data)
+    {
+        if (requestCode == REQUEST_IMPORT_FILE)
+        {
+            if (resultCode == AppCompatActivity.RESULT_OK && data != null)
+                importSelectedFiles(data);
+            return;
+        }
+        super.onActivityResult(requestCode, resultCode, data);
     }
 
     @Override
@@ -881,6 +896,9 @@ public abstract class FileListViewFragmentBase extends RxAppCompatDialogFragment
                 else
                     pasteFiles(false);
                 return true;
+            case R.id.import_file:
+                openSystemFilePicker();
+                return true;
             case R.id.move:
                 pasteFiles(true);
                 return true;
@@ -1088,6 +1106,83 @@ public abstract class FileListViewFragmentBase extends RxAppCompatDialogFragment
         catch (IOException e)
         {
             Logger.showAndLog(getActivity(), e);
+        }
+    }
+
+    private void openSystemFilePicker()
+    {
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("*/*");
+        intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
+        try
+        {
+            startActivityForResult(intent, REQUEST_IMPORT_FILE);
+        }
+        catch (ActivityNotFoundException e)
+        {
+            Logger.showAndLog(getActivity(), e);
+        }
+    }
+
+    private void importSelectedFiles(Intent data)
+    {
+        ArrayList<Uri> uris = getImportUris(data);
+        if (uris.isEmpty())
+            return;
+        try
+        {
+            ContentResolverLocation srcLocation = new ContentResolverLocation(getActivity());
+            ContentResolverFs srcFs = srcLocation.getFS();
+            ArrayList<Path> paths = new ArrayList<>(uris.size());
+            for (Uri uri : uris)
+            {
+                takePersistableReadPermission(data, uri);
+                paths.add(srcFs.getPath(uri.toString()));
+            }
+            SrcDstCollection recs = getSrcDsts(srcLocation, false, paths);
+            FileOpsService.copyFiles(getActivity(), recs, false);
+            Toast.makeText(getActivity(), R.string.file_operation_started, Toast.LENGTH_SHORT).show();
+        }
+        catch (IOException e)
+        {
+            Logger.showAndLog(getActivity(), e);
+        }
+    }
+
+    private ArrayList<Uri> getImportUris(Intent data)
+    {
+        ArrayList<Uri> res = new ArrayList<>();
+        ClipData clipData = data.getClipData();
+        if (clipData != null)
+        {
+            for (int i = 0; i < clipData.getItemCount(); i++)
+            {
+                Uri uri = clipData.getItemAt(i).getUri();
+                if (uri != null)
+                    res.add(uri);
+            }
+        }
+        else if (data.getData() != null)
+            res.add(data.getData());
+        return res;
+    }
+
+    private void takePersistableReadPermission(Intent data, Uri uri)
+    {
+        int flags = data.getFlags();
+        boolean canPersist = (flags & Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION) != 0;
+        boolean canRead = (flags & Intent.FLAG_GRANT_READ_URI_PERMISSION) != 0;
+        if (!canPersist || !canRead)
+            return;
+        try
+        {
+            getActivity().getContentResolver().takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        }
+        catch (SecurityException | IllegalArgumentException e)
+        {
+            Logger.log(e);
         }
     }
 
