@@ -17,7 +17,10 @@ public class PFDRandomAccessIO extends FDRandomAccessIO
     @Override
     public void close() throws IOException
     {
-        _pfd.close();
-        super.close();
+        if (getFD() >= 0)
+        {
+            _pfd.close();
+            setFD(-1);
+        }
     }
 }

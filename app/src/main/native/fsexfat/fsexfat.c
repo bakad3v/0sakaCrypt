@@ -557,10 +557,10 @@ static uint32_t find_last_used_cluster(const struct exfat* ef)
 {
     uint32_t i;
 
-    for (i = ef->cmap.size - 1; i >= 0; i--)
-        if (BMAP_GET(ef->cmap.chunk, i))
-            break;
-    return i;
+    for (i = ef->cmap.size; i > 0; i--)
+        if (BMAP_GET(ef->cmap.chunk, i - 1))
+            return i - 1;
+    return UINT32_MAX;
 }
 
 JNIEXPORT jlong JNICALL
@@ -570,14 +570,15 @@ Java_com_igeltech_nevercrypt_fs_exfat_ExFat_getFreeSpaceStartOffset(JNIEnv *env,
     if(ef == NULL)
         return -1;
     exfat_debug("[%s]", __func__);
-    uint32_t c = find_last_used_cluster(ef);
-    if(c == -1)
-        c = EXFAT_FIRST_DATA_CLUSTER;
-    else
-        c = c + EXFAT_FIRST_DATA_CLUSTER;
+    uint32_t last_used = find_last_used_cluster(ef);
+    if(last_used == UINT32_MAX)
+        return exfat_c2o(ef, EXFAT_FIRST_DATA_CLUSTER);
+    uint32_t c = last_used + EXFAT_FIRST_DATA_CLUSTER;
     if(CLUSTER_INVALID(*ef->sb, c))
         return -1;
-    return exfat_c2o(ef, c);
+    off64_t start = exfat_c2o(ef, c) + CLUSTER_SIZE(*ef->sb);
+    off64_t volume_size = (off64_t) le64_to_cpu(ef->sb->sector_count) << ef->sb->sector_bits;
+    return start > volume_size ? volume_size : start;
 }
 
 JNIEXPORT jint JNICALL
@@ -597,7 +598,7 @@ Java_com_igeltech_nevercrypt_fs_exfat_ExFat_randFreeSpace(JNIEnv *env, jobject i
         if (BMAP_GET(ef->cmap.chunk, i) == 0)
         {
             for(int j=0;j<cluster_size;j++)
-                buf[i] = (uint8_t) (rand() % 256);
+                buf[j] = (uint8_t) (rand() % 256);
 
             uint32_t cluster = i + EXFAT_FIRST_DATA_CLUSTER;
             if (exfat_pwrite(ef->dev, buf, cluster_size,

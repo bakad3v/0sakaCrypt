@@ -254,6 +254,14 @@ public abstract class CreateLocationFragmentBase extends PropertiesFragmentBase 
         return loc != null && !loc.toString().isEmpty();
     }
 
+    /**
+     * Lets subclasses handle task results that should continue a multi-step creation flow.
+     */
+    protected boolean handleCreateLocationTaskResult(Bundle args, int result) throws Exception
+    {
+        return false;
+    }
+
     protected void showAddExistingLocationRequestProperties()
     {
         _propertiesView.setPropertiesState(false);
@@ -300,7 +308,7 @@ public abstract class CreateLocationFragmentBase extends PropertiesFragmentBase 
                 int res = (Integer) result.getResult();
                 if (res == CreateContainerTaskFragmentBase.RESULT_REQUEST_OVERWRITE)
                     OverwriteContainerDialog.showDialog(getFragmentManager());
-                else
+                else if (!handleCreateLocationTaskResult(args, res))
                 {
                     getActivity().setResult(AppCompatActivity.RESULT_OK);
                     getActivity().finish();
@@ -308,7 +316,8 @@ public abstract class CreateLocationFragmentBase extends PropertiesFragmentBase 
             }
             catch (Throwable e)
             {
-                Logger.showAndLog(getActivity(), result.getError());
+                Throwable error = result.getError();
+                Logger.showAndLog(getActivity(), error != null ? error : e);
             }
         }
 

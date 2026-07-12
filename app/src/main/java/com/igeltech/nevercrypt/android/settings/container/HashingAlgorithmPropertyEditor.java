@@ -15,9 +15,25 @@ import java.util.List;
 
 public class HashingAlgorithmPropertyEditor extends ChoiceDialogPropertyEditor
 {
+    private final String _hashAlgKey;
+    private final boolean _hiddenVolume;
+
+    /**
+     * Creates the default password hash editor for the outer volume.
+     */
     public HashingAlgorithmPropertyEditor(CreateContainerFragmentBase createContainerFragment)
     {
-        super(createContainerFragment, R.string.hash_algorithm, 0, createContainerFragment.getTag());
+        this(createContainerFragment, R.string.hash_algorithm, CreateContainerTaskFragmentBase.ARG_HASHING_ALG, false);
+    }
+
+    /**
+     * Creates a password hash editor bound to either outer or hidden volume state keys.
+     */
+    public HashingAlgorithmPropertyEditor(CreateContainerFragmentBase createContainerFragment, int titleResId, String hashAlgKey, boolean hiddenVolume)
+    {
+        super(createContainerFragment, titleResId, 0, createContainerFragment.getTag());
+        _hashAlgKey = hashAlgKey;
+        _hiddenVolume = hiddenVolume;
     }
 
     public static String getHashFuncName(MessageDigest md)
@@ -35,7 +51,7 @@ public class HashingAlgorithmPropertyEditor extends ChoiceDialogPropertyEditor
         List<MessageDigest> algs = getCurrentHashAlgList();
         if (algs == null)
             return -1;
-        String algName = getHostFragment().getState().getString(CreateContainerTaskFragmentBase.ARG_HASHING_ALG);
+        String algName = getHostFragment().getState().getString(_hashAlgKey);
         if (algName != null)
         {
             MessageDigest md = VolumeLayoutBase.findHashFunc(algs, algName);
@@ -52,7 +68,7 @@ public class HashingAlgorithmPropertyEditor extends ChoiceDialogPropertyEditor
     {
         List<MessageDigest> algs = getCurrentHashAlgList();
         MessageDigest md = algs.get(value);
-        getHostFragment().getState().putString(CreateContainerTaskFragmentBase.ARG_HASHING_ALG, md.getAlgorithm());
+        getHostFragment().getState().putString(_hashAlgKey, md.getAlgorithm());
     }
 
     @Override
@@ -73,9 +89,12 @@ public class HashingAlgorithmPropertyEditor extends ChoiceDialogPropertyEditor
         return (CreateContainerFragmentBase) getHost();
     }
 
+    /**
+     * Returns the hash algorithms supported by the currently selected outer or hidden layout.
+     */
     private List<MessageDigest> getCurrentHashAlgList()
     {
-        VolumeLayout vl = getHostFragment().getSelectedVolumeLayout();
+        VolumeLayout vl = _hiddenVolume ? getHostFragment().getSelectedHiddenVolumeLayout() : getHostFragment().getSelectedVolumeLayout();
         return vl != null ? vl.getSupportedHashFuncs() : null;
     }
 }

@@ -16,7 +16,6 @@ import com.igeltech.nevercrypt.fs.FileSystemInfo;
 import com.igeltech.nevercrypt.fs.Path;
 import com.igeltech.nevercrypt.fs.RandomAccessIO;
 import com.igeltech.nevercrypt.fs.fat.FATInfo;
-import com.igeltech.nevercrypt.fs.fat.FatFS;
 import com.igeltech.nevercrypt.locations.ContainerLocation;
 import com.igeltech.nevercrypt.locations.CryptoLocation;
 import com.igeltech.nevercrypt.locations.Location;
@@ -36,23 +35,6 @@ public abstract class ContainerFormatterBase extends LocationFormatter
     protected long _containerSize;
     protected boolean _randFreeSpace;
     protected int _numKDFIterations;
-
-    protected ContainerFormatterBase(Parcel in)
-    {
-        super(in);
-        String s = in.readString();
-        if (s != null)
-            _containerFormat = getContainerFormatByName(s);
-        _containerSize = in.readLong();
-        _randFreeSpace = in.readByte() != 0;
-        s = in.readString();
-        String s2 = in.readString();
-        if (s != null && s2 != null)
-            setEncryptionEngine(s, s2);
-        s = in.readString();
-        if (s != null)
-            setHashFunc(s);
-    }
 
     protected ContainerFormatterBase()
     {
@@ -269,25 +251,6 @@ public abstract class ContainerFormatterBase extends LocationFormatter
         containerFormat.formatContainer(io, layout, _fileSystemType);
     }
 
-    protected void fillFreeClustersWithRandomData(FatFS fat) throws IOException
-    {
-        RandomAccessIO f = fat.getContainerFile();
-        int[] clusterTable = fat.getClusterTable();
-        byte[] buf = new byte[fat.getSectorsPerCluster() * fat.getBytesPerSector()];
-        SecureRandom rand = new SecureRandom();
-        for (int i = 2; i < clusterTable.length; i++)
-        {
-            if (clusterTable[i] == 0)
-            {
-                rand.nextBytes(buf);
-                f.seek(fat.getClusterOffset(i));
-                f.write(buf, 0, buf.length);
-            }
-            if (!reportProgress((byte) (i * 100 / clusterTable.length)))
-                break;
-        }
-    }
-
     protected void fillFreeSpace(RandomAccessIO f, long size) throws IOException
     {
         SecureRandom r = new SecureRandom();
@@ -295,7 +258,7 @@ public abstract class ContainerFormatterBase extends LocationFormatter
         for (long i = 0; i < size; i += buf.length)
         {
             r.nextBytes(buf);
-            f.write(buf, 0, buf.length);
+            f.write(buf, 0, (int) Math.min(buf.length, size - i));
             if (!reportProgress((byte) (i * 100 / size)))
                 break;
         }

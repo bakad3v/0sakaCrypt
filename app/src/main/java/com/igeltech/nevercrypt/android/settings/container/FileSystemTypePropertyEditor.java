@@ -11,9 +11,23 @@ import java.util.List;
 
 public class FileSystemTypePropertyEditor extends ChoiceDialogPropertyEditor
 {
+    private final String _fileSystemTypeKey;
+
+    /**
+     * Creates the default file system editor for the outer volume.
+     */
     public FileSystemTypePropertyEditor(CreateContainerFragmentBase createContainerFragment)
     {
-        super(createContainerFragment, R.string.file_system_type, 0, createContainerFragment.getTag());
+        this(createContainerFragment, R.string.file_system_type, CreateContainerTaskFragmentBase.ARG_FILE_SYSTEM_TYPE);
+    }
+
+    /**
+     * Creates a file system editor that stores its value under the supplied state key.
+     */
+    public FileSystemTypePropertyEditor(CreateContainerFragmentBase createContainerFragment, int titleResId, String fileSystemTypeKey)
+    {
+        super(createContainerFragment, titleResId, 0, createContainerFragment.getTag());
+        _fileSystemTypeKey = fileSystemTypeKey;
     }
 
     @Override
@@ -22,7 +36,7 @@ public class FileSystemTypePropertyEditor extends ChoiceDialogPropertyEditor
         List<String> names = getEntries();
         FileSystemInfo cur = getHostFragment().
                 getState().
-                getParcelable(CreateContainerTaskFragmentBase.ARG_FILE_SYSTEM_TYPE);
+                getParcelable(_fileSystemTypeKey);
         if (cur != null)
             return names.indexOf(cur.getFileSystemName());
         else if (!names.isEmpty())
@@ -38,7 +52,7 @@ public class FileSystemTypePropertyEditor extends ChoiceDialogPropertyEditor
         FileSystemInfo selected = fs.get(value);
         getHostFragment().
                 getState().
-                putParcelable(CreateContainerTaskFragmentBase.ARG_FILE_SYSTEM_TYPE, selected);
+                putParcelable(_fileSystemTypeKey, selected);
     }
 
     @Override

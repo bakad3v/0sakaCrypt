@@ -12,15 +12,29 @@ import com.igeltech.nevercrypt.locations.Openable;
 
 public class ContainerPasswordPropertyEditor extends ButtonPropertyEditor implements PasswordDialog.PasswordReceiver
 {
+    private final String _passwordKey;
+
+    /**
+     * Creates the default password editor for the outer container.
+     */
     public ContainerPasswordPropertyEditor(CreateLocationFragment createLocationFragment)
     {
-        super(createLocationFragment, R.string.container_password, 0, R.string.change);
+        this(createLocationFragment, R.string.container_password, Openable.PARAM_PASSWORD);
+    }
+
+    /**
+     * Creates a password editor that stores its value under the supplied state key.
+     */
+    public ContainerPasswordPropertyEditor(CreateLocationFragment createLocationFragment, int titleResId, String passwordKey)
+    {
+        super(createLocationFragment, titleResId, 0, R.string.change);
+        _passwordKey = passwordKey;
     }
 
     @Override
     public void onPasswordEntered(PasswordDialog dlg)
     {
-        getHostFragment().getState().putParcelable(Openable.PARAM_PASSWORD, new SecureBuffer(dlg.getPassword()));
+        getHostFragment().getState().putParcelable(_passwordKey, new SecureBuffer(dlg.getPassword()));
     }
 
     @Override
