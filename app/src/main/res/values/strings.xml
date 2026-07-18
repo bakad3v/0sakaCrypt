@@ -25,6 +25,8 @@
     <string name="container_size">Container size</string>
     <string name="container_size_desc">Enter the size of the container in megabytes</string>
     <string name="container_password">Container password</string>
+    <string name="save_volume_settings">Save volume settings in app memory</string>
+    <string name="save_volume_settings_desc">Save container format, encryption algorithm, and hash algorithm hints for faster opening</string>
     <string name="create_hidden_volume">Create hidden volume</string>
     <string name="create_hidden_volume_desc">Create a hidden VeraCrypt volume inside the free space of the outer volume</string>
     <string name="hidden_volume_password">Hidden volume password</string>

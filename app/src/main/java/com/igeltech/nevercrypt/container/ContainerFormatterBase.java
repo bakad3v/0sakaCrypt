@@ -34,6 +34,7 @@ public abstract class ContainerFormatterBase extends LocationFormatter
     protected MessageDigest _hashFunc;
     protected long _containerSize;
     protected boolean _randFreeSpace;
+    protected boolean _saveVolumeSettings;
     protected int _numKDFIterations;
 
     protected ContainerFormatterBase()
@@ -113,6 +114,11 @@ public abstract class ContainerFormatterBase extends LocationFormatter
     public void enableFreeSpaceRand(boolean val)
     {
         _randFreeSpace = val;
+    }
+
+    public void setSaveVolumeSettings(boolean val)
+    {
+        _saveVolumeSettings = val;
     }
 
     public void setFileSystemType(FileSystemInfo fsInfo)
@@ -220,11 +226,16 @@ public abstract class ContainerFormatterBase extends LocationFormatter
 
     protected void setHints(ContainerLocation cont)
     {
+        if (!_saveVolumeSettings)
+        {
+            cont.getExternalSettings().setContainerFormatName(null);
+            cont.getExternalSettings().setEncEngineName(null);
+            cont.getExternalSettings().setHashFuncName(null);
+            return;
+        }
         cont.getExternalSettings().setContainerFormatName(_containerFormat.getFormatName());
-        if (_encryptionEngine != null)
-            cont.getExternalSettings().setEncEngineName(VolumeLayoutBase.getEncEngineName(_encryptionEngine));
-        if (_hashFunc != null)
-            cont.getExternalSettings().setHashFuncName(_hashFunc.getAlgorithm());
+        cont.getExternalSettings().setEncEngineName(_encryptionEngine == null ? null : VolumeLayoutBase.getEncEngineName(_encryptionEngine));
+        cont.getExternalSettings().setHashFuncName(_hashFunc == null ? null : _hashFunc.getAlgorithm());
     }
 
     protected void setExternalContainerSettings(CryptoLocation loc) throws ApplicationException, IOException

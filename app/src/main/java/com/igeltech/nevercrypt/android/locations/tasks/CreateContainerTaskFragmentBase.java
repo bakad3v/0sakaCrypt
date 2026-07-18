@@ -29,6 +29,7 @@ public abstract class CreateContainerTaskFragmentBase extends CreateLocationTask
     public static final String ARG_SIZE = "com.igeltech.nevercrypt.android.SIZE";
     public static final String ARG_FILL_FREE_SPACE = "com.igeltech.nevercrypt.android.FILL_FREE_SPACE";
     public static final String ARG_FILE_SYSTEM_TYPE = "com.igeltech.nevercrypt.android.FILE_SYSTEM_TYPE";
+    public static final String ARG_SAVE_VOLUME_SETTINGS = "com.igeltech.nevercrypt.android.SAVE_VOLUME_SETTINGS";
     public static final String ARG_CREATE_HIDDEN_VOLUME = "com.igeltech.nevercrypt.android.CREATE_HIDDEN_VOLUME";
     public static final String ARG_HIDDEN_PASSWORD = "com.igeltech.nevercrypt.android.HIDDEN_PASSWORD";
     public static final String ARG_HIDDEN_SIZE = "com.igeltech.nevercrypt.android.HIDDEN_SIZE";
@@ -75,6 +76,7 @@ public abstract class CreateContainerTaskFragmentBase extends CreateLocationTask
         if (hashAlgName != null)
             cf.setHashFunc(hashAlgName);
         boolean createHiddenVolume = args.getBoolean(ARG_CREATE_HIDDEN_VOLUME, false);
+        cf.setSaveVolumeSettings(args.getBoolean(ARG_SAVE_VOLUME_SETTINGS, false));
         if (cf instanceof ContainerFormatter)
             ((ContainerFormatter) cf).setCreateOuterVolumeForHiddenVolume(createHiddenVolume);
         cf.enableFreeSpaceRand(args.getBoolean(ARG_FILL_FREE_SPACE) || createHiddenVolume);

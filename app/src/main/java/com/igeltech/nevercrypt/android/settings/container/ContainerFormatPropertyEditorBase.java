@@ -123,6 +123,7 @@ public abstract class ContainerFormatPropertyEditorBase extends ChoiceDialogProp
         pm.setPropertyState(R.string.hash_algorithm, enable);
         pm.setPropertyState(R.string.fill_free_space_with_random_data, enable);
         pm.setPropertyState(R.string.file_system_type, enable);
+        pm.setPropertyState(R.string.save_volume_settings, enable);
         pm.setPropertyState(R.string.create_hidden_volume, enable && cfi != null && cfi.hasHiddenContainerSupport());
         getHostFragment().changeHiddenVolumeDependentOptions();
     }

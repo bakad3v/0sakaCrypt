@@ -21,6 +21,7 @@ import com.igeltech.nevercrypt.android.settings.container.FillFreeSpacePropertyE
 import com.igeltech.nevercrypt.android.settings.container.HashingAlgorithmPropertyEditor;
 import com.igeltech.nevercrypt.android.settings.container.PIMPropertyEditor;
 import com.igeltech.nevercrypt.android.settings.container.PathToContainerPropertyEditor;
+import com.igeltech.nevercrypt.android.settings.container.SaveVolumeSettingsPropertyEditor;
 import com.igeltech.nevercrypt.android.settings.encfs.BlockSizePropertyEditor;
 import com.igeltech.nevercrypt.android.settings.encfs.DataCodecPropertyEditor;
 import com.igeltech.nevercrypt.android.settings.encfs.EnableEmptyBlocksPropertyEditor;
@@ -173,6 +174,7 @@ public abstract class CreateContainerFragmentBase extends CreateLocationFragment
         _propertiesView.addProperty(new HashingAlgorithmPropertyEditor(this));
         _propertiesView.addProperty(new FileSystemTypePropertyEditor(this));
         _propertiesView.addProperty(new FillFreeSpacePropertyEditor(this));
+        _propertiesView.addProperty(new SaveVolumeSettingsPropertyEditor(this));
     }
 
     private void createEncFsProperties()

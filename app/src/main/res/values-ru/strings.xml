@@ -24,6 +24,8 @@
     <string name="container_size">Размер контейнера</string>
     <string name="container_size_desc">Введите размер контейнера в мегабайтах</string>
     <string name="container_password">Пароль контейнера</string>
+    <string name="save_volume_settings">Сохранить настройки тома в памяти приложения</string>
+    <string name="save_volume_settings_desc">Сохранить формат контейнера, алгоритм шифрования и алгоритм хэширования для более быстрого открытия</string>
     <string name="create_hidden_volume">Создать скрытый том</string>
     <string name="create_hidden_volume_desc">Создать скрытый том VeraCrypt в свободном пространстве внешнего тома</string>
     <string name="hidden_volume_password">Пароль скрытого тома</string>
