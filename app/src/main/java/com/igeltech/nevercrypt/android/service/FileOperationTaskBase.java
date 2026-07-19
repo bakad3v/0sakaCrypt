@@ -118,7 +118,9 @@ public abstract class FileOperationTaskBase extends ServiceTaskWithNotificationB
 
     private void broadcastCompleted()
     {
-        _context.sendBroadcast(new Intent(FileOpsService.BROADCAST_FILE_OPERATION_COMPLETED));
+        Intent intent = new Intent(FileOpsService.BROADCAST_FILE_OPERATION_COMPLETED);
+        intent.setPackage(_context.getPackageName());
+        _context.sendBroadcast(intent);
     }
 
     protected FileOperationParam getParam()

@@ -17,6 +17,8 @@ public class Logger implements UncaughtExceptionHandler
     private static final Object _syncObject = new Object();
     private static Logger l;
     private static boolean _disableLog = false;
+    private static UncaughtExceptionHandler _previousDefaultHandler;
+    private static UncaughtExceptionHandler _previousMainThreadHandler;
 
     public static void disableLog(boolean val)
     {
@@ -34,6 +36,8 @@ public class Logger implements UncaughtExceptionHandler
             return;
         Logger.l = new Logger();
         Thread t = Looper.getMainLooper().getThread();
+        _previousMainThreadHandler = t.getUncaughtExceptionHandler();
+        _previousDefaultHandler = Thread.getDefaultUncaughtExceptionHandler();
         t.setUncaughtExceptionHandler(Logger.l);
         Thread.setDefaultUncaughtExceptionHandler(Logger.l);
     }
@@ -41,9 +45,11 @@ public class Logger implements UncaughtExceptionHandler
     public static void closeLogger()
     {
         Thread t = Looper.getMainLooper().getThread();
-        t.setUncaughtExceptionHandler(null);
-        Thread.setDefaultUncaughtExceptionHandler(null);
+        t.setUncaughtExceptionHandler(_previousMainThreadHandler);
+        Thread.setDefaultUncaughtExceptionHandler(_previousDefaultHandler);
         Logger.l = null;
+        _previousDefaultHandler = null;
+        _previousMainThreadHandler = null;
     }
 
     public static void showAndLog(Context context, Throwable err)
@@ -108,7 +114,14 @@ public class Logger implements UncaughtExceptionHandler
     {
         if (!Logger._disableLog)
             Log.e(TAG, "Uncaught main thread exception", ex);
-        thread.getThreadGroup().destroy();
+        UncaughtExceptionHandler handler = _previousDefaultHandler;
+        if (handler != null && handler != this)
+            handler.uncaughtException(thread, ex);
+        else
+        {
+            android.os.Process.killProcess(android.os.Process.myPid());
+            System.exit(10);
+        }
     }
 
     private void showAndLogError(Context context, Throwable err)

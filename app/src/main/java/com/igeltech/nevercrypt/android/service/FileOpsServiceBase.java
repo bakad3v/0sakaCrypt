@@ -183,7 +183,7 @@ public abstract class FileOpsServiceBase extends IntentService
         Intent i = new Intent(context, FileOpsService.class);
         i.setAction(ACTION_CANCEL_TASK);
         i.putExtra(INTENT_PARAM_TASK_ID, taskId);
-        return PendingIntent.getService(context, taskId, i, PendingIntent.FLAG_ONE_SHOT);
+        return PendingIntent.getService(context, taskId, i, PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE);
     }
 
     public static void startFileViewer(Context context, Location fileLocation) throws UserException

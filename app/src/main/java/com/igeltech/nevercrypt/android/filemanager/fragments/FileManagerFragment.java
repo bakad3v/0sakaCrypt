@@ -52,6 +52,7 @@ public class FileManagerFragment extends RxFragment implements PreviewFragment.H
     protected boolean _isLargeScreenLayout;
     FileManagerFragmentArgs _args;
     Location _currentLocation;
+    private boolean _updatePathReceiverRegistered;
 
     public static Intent getOverwriteRequestIntent(Context context, boolean move, SrcDstCollection records)
     {
@@ -100,6 +101,8 @@ public class FileManagerFragment extends RxFragment implements PreviewFragment.H
 
     public void rereadCurrentLocation()
     {
+        if (!isAdded())
+            return;
         FileListViewFragment f = getFileListViewFragment();
         if (f != null)
             f.rereadCurrentLocation();
@@ -164,7 +167,6 @@ public class FileManagerFragment extends RxFragment implements PreviewFragment.H
     public void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-        ContextCompat.registerReceiver(requireContext().getApplicationContext(), _updatePathReceiver, new IntentFilter(FileOpsService.BROADCAST_FILE_OPERATION_COMPLETED), ContextCompat.RECEIVER_EXPORTED);
         _isLargeScreenLayout = !UserSettings.getSettings(getContext()).disableLargeSceenLayouts() && getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE;
         // Get arguments passed by NavController
         _args = FileManagerFragmentArgs.fromBundle(requireArguments());
@@ -202,6 +204,20 @@ public class FileManagerFragment extends RxFragment implements PreviewFragment.H
         requireActivity().getOnBackPressedDispatcher().addCallback(this, callback);
     }
 
+    @Override
+    public void onStart()
+    {
+        super.onStart();
+        registerUpdatePathReceiver();
+    }
+
+    @Override
+    public void onStop()
+    {
+        unregisterUpdatePathReceiver();
+        super.onStop();
+    }
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState)
@@ -230,14 +246,34 @@ public class FileManagerFragment extends RxFragment implements PreviewFragment.H
 
     public FileListDataFragment getFileListDataFragment()
     {
+        if (!isAdded())
+            return null;
         FileListDataFragment f = (FileListDataFragment) getChildFragmentManager().findFragmentByTag(FileListDataFragment.TAG);
         return f != null && f.isAdded() ? f : null;
     }
 
     public FileListViewFragment getFileListViewFragment()
     {
+        if (!isAdded())
+            return null;
         FileListViewFragment f = (FileListViewFragment) getChildFragmentManager().findFragmentByTag(FileListViewFragment.TAG);
         return f != null && f.isAdded() ? f : null;
+    }
+
+    private void registerUpdatePathReceiver()
+    {
+        if (_updatePathReceiverRegistered)
+            return;
+        ContextCompat.registerReceiver(requireContext(), _updatePathReceiver, new IntentFilter(FileOpsService.BROADCAST_FILE_OPERATION_COMPLETED), ContextCompat.RECEIVER_NOT_EXPORTED);
+        _updatePathReceiverRegistered = true;
+    }
+
+    private void unregisterUpdatePathReceiver()
+    {
+        if (!_updatePathReceiverRegistered)
+            return;
+        requireContext().unregisterReceiver(_updatePathReceiver);
+        _updatePathReceiverRegistered = false;
     }
 
     protected void showSecondaryFragment(Fragment f, String tag)
@@ -336,4 +372,3 @@ public class FileManagerFragment extends RxFragment implements PreviewFragment.H
         };
     }
 }
-

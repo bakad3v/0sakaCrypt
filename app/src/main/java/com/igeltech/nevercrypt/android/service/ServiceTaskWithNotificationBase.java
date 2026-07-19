@@ -90,7 +90,7 @@ public abstract class ServiceTaskWithNotificationBase implements Task
         NotificationCompat.Builder nb = new NotificationCompat.Builder(_context, CompatHelper.getFileOperationsNotificationsChannelId(_context)).setSmallIcon(R.drawable.ic_notification_new).setOngoing(false).setAutoCancel(true).setContentTitle(title).setContentText(message);
         //Gingerbread compatibility
         final Intent emptyIntent = new Intent();
-        PendingIntent pi = PendingIntent.getActivity(_context, 0, emptyIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent pi = PendingIntent.getActivity(_context, 0, emptyIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         nb.setContentIntent(pi);
         NotificationManagerCompat nm = NotificationManagerCompat.from(_context);
         if (nm != null)

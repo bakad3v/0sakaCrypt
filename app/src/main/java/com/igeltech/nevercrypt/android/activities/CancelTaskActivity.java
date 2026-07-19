@@ -27,7 +27,7 @@ public class CancelTaskActivity extends AppCompatActivity
 
     public static PendingIntent getCancelTaskPendingIntent(Context context, int taskId)
     {
-        return PendingIntent.getActivity(context, taskId, getCancelTaskIntent(context, taskId), PendingIntent.FLAG_UPDATE_CURRENT);
+        return PendingIntent.getActivity(context, taskId, getCancelTaskIntent(context, taskId), PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
     }
 
     @Override

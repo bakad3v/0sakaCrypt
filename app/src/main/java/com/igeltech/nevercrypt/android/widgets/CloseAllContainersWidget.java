@@ -34,7 +34,7 @@ public class CloseAllContainersWidget extends AppWidgetProvider
             i = new Intent(context, LocationManagerActivity.class);
             i.setAction(Intent.ACTION_MAIN);
         }
-        PendingIntent pendingIntent = PendingIntent.getActivity(context, widgetId, i, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent pendingIntent = PendingIntent.getActivity(context, widgetId, i, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         views.setOnClickPendingIntent(R.id.containersClosedImageButton, pendingIntent);
         appWidgetManager.updateAppWidget(widgetId, views);
     }

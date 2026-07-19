@@ -163,7 +163,7 @@ public class LocationsServiceBase extends Service
     {
         Intent i = new Intent(this, LocationManagerActivity.class);
         i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CompatHelper.getServiceRunningNotificationsChannelId(this)).setContentTitle(getString(R.string.app_service_is_running)).setSmallIcon(R.drawable.ic_notification_new).setContentText("").setContentIntent(PendingIntent.getActivity(this, 0, i, PendingIntent.FLAG_IMMUTABLE)).setOngoing(true).addAction(R.drawable.ic_action_cancel, getString(R.string.close_all_containers), PendingIntent.getActivity(this, 0, new Intent(this, CloseLocationsActivity.class), PendingIntent.FLAG_UPDATE_CURRENT));
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CompatHelper.getServiceRunningNotificationsChannelId(this)).setContentTitle(getString(R.string.app_service_is_running)).setSmallIcon(R.drawable.ic_notification_new).setContentText("").setContentIntent(PendingIntent.getActivity(this, 0, i, PendingIntent.FLAG_IMMUTABLE)).setOngoing(true).addAction(R.drawable.ic_action_cancel, getString(R.string.close_all_containers), PendingIntent.getActivity(this, 0, new Intent(this, CloseLocationsActivity.class), PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE));
         Notification n = builder.build();
         n.flags |= Notification.FLAG_NO_CLEAR | Notification.FLAG_FOREGROUND_SERVICE;
         return n;

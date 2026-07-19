@@ -78,7 +78,9 @@ public class RenameFileTask extends TaskFragment
                 try
                 {
                     result.getResult();
-                    activity.sendBroadcast(new Intent(FileOpsService.BROADCAST_FILE_OPERATION_COMPLETED));
+                    Intent intent = new Intent(FileOpsService.BROADCAST_FILE_OPERATION_COMPLETED);
+                    intent.setPackage(activity.getPackageName());
+                    activity.sendBroadcast(intent);
                 }
                 catch (Throwable e)
                 {
