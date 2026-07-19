@@ -70,6 +70,7 @@ public abstract class ContainerFormatPropertyEditorBase extends ChoiceDialogProp
                 ContainerFormatInfo cfi = getSelectedContainerFormatInfo(value);
                 if (cfi != null)
                     getHostFragment().getState().putString(CreateContainerTaskFragmentBase.ARG_CONTAINER_FORMAT, cfi.getFormatName());
+                getHostFragment().applyDefaultFillFreeSpaceForCurrentFormat();
                 updateEncFsProperties(false);
                 updateContainerFormatProperties(!addExisting, cfi);
             }

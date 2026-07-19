@@ -146,9 +146,9 @@ public abstract class CreateContainerFragmentBase extends CreateLocationFragment
     @Override
     protected void createProperties()
     {
+        initDefaultContainerFormat();
+        applyDefaultFillFreeSpaceForCurrentFormat();
         super.createProperties();
-        if (!_state.containsKey(CreateContainerTaskFragmentBase.ARG_CONTAINER_FORMAT))
-            _state.putString(CreateContainerTaskFragmentBase.ARG_CONTAINER_FORMAT, Container.getSupportedFormats().get(1).getFormatName());
     }
 
     @Override
@@ -164,6 +164,24 @@ public abstract class CreateContainerFragmentBase extends CreateLocationFragment
     protected ContainerFormatInfo getCurrentContainerFormatInfo()
     {
         return Container.findFormatByName(_state.getString(CreateContainerTaskFragmentBase.ARG_CONTAINER_FORMAT));
+    }
+
+    public void applyDefaultFillFreeSpaceForCurrentFormat()
+    {
+        if (_state.getBoolean(CreateContainerTaskFragmentBase.ARG_FILL_FREE_SPACE_USER_SET, false))
+            return;
+        _state.putBoolean(
+                CreateContainerTaskFragmentBase.ARG_FILL_FREE_SPACE,
+                com.igeltech.nevercrypt.veracrypt.FormatInfo.FORMAT_NAME.equals(
+                        _state.getString(CreateContainerTaskFragmentBase.ARG_CONTAINER_FORMAT)
+                )
+        );
+    }
+
+    private void initDefaultContainerFormat()
+    {
+        if (!_state.containsKey(CreateContainerTaskFragmentBase.ARG_CONTAINER_FORMAT))
+            _state.putString(CreateContainerTaskFragmentBase.ARG_CONTAINER_FORMAT, com.igeltech.nevercrypt.veracrypt.FormatInfo.FORMAT_NAME);
     }
 
     protected void createContainerProperties()
