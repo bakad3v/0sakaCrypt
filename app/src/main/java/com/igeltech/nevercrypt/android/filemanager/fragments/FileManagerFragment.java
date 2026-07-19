@@ -260,6 +260,10 @@ public class FileManagerFragment extends RxFragment implements PreviewFragment.H
         return f != null && f.isAdded() ? f : null;
     }
 
+    /**
+     * Subscribes the visible file manager to internal file-operation updates.
+     * The receiver must follow the fragment lifecycle because it touches child fragments.
+     */
     private void registerUpdatePathReceiver()
     {
         if (_updatePathReceiverRegistered)
@@ -268,6 +272,10 @@ public class FileManagerFragment extends RxFragment implements PreviewFragment.H
         _updatePathReceiverRegistered = true;
     }
 
+    /**
+     * Removes the file-operation update receiver before the fragment becomes detached.
+     * This prevents completed background tasks from refreshing a fragment with no host.
+     */
     private void unregisterUpdatePathReceiver()
     {
         if (!_updatePathReceiverRegistered)

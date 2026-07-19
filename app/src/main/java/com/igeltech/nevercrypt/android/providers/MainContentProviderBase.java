@@ -16,6 +16,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.ParcelFileDescriptor;
+import android.system.ErrnoException;
+import android.system.OsConstants;
 import android.util.Base64;
 
 import androidx.annotation.NonNull;
@@ -23,6 +25,7 @@ import androidx.annotation.NonNull;
 import com.igeltech.nevercrypt.android.Logger;
 import com.igeltech.nevercrypt.android.filemanager.tasks.LoadPathInfoObservable;
 import com.igeltech.nevercrypt.android.helpers.CachedPathInfo;
+import com.igeltech.nevercrypt.android.helpers.ExtendedFileInfoLoader;
 import com.igeltech.nevercrypt.android.helpers.TempFilesMonitor;
 import com.igeltech.nevercrypt.android.helpers.WipeFilesTask;
 import com.igeltech.nevercrypt.android.locations.PathsStore;
@@ -170,10 +173,10 @@ public abstract class MainContentProviderBase extends ContentProvider
                     {
                         //String mime = FileOpsService.getMimeTypeFromExtension(cp.getContext(), loc.getCurrentPath());
                         //return cp.openPipeHelper(srcUri, mime, opts, f, new PipeWriter());
-                        return writeToPipe(f, opts);
+                        return writeToPipe(f, opts == null ? new Bundle() : opts);
                     }
                     else
-                        return readFromPipe(f, opts == null ? new Bundle() : opts);
+                        return readFromPipe(cp, loc, f, opts == null ? new Bundle() : opts);
                 }
             }
             Path parentPath = loc.getCurrentPath();
@@ -240,7 +243,7 @@ public abstract class MainContentProviderBase extends ContentProvider
         return tmpLocation;
     }
 
-    private static ParcelFileDescriptor readFromPipe(final File targetFile, final Bundle opts) throws IOException
+    private static ParcelFileDescriptor readFromPipe(final ContentProvider cp, final Location loc, final File targetFile, final Bundle opts) throws IOException
     {
         final ParcelFileDescriptor[] pfds = ParcelFileDescriptor.createPipe();
         Completable.create(s -> {
@@ -249,6 +252,7 @@ public abstract class MainContentProviderBase extends ContentProvider
                 Util.CancellableProgressInfo pi = new Util.CancellableProgressInfo();
                 s.setCancellable(pi);
                 Util.copyFileFromInputStream(fin, targetFile, opts.getLong(OPTION_OFFSET, 0), opts.getLong(OPTION_NUM_BYTES, -1), pi);
+                notifyLocationChanged(cp.getContext(), loc);
             }
             pfds[0].close();
             s.onComplete();
@@ -269,13 +273,83 @@ public abstract class MainContentProviderBase extends ContentProvider
                 s.setCancellable(pi);
                 Util.copyFileToOutputStream(fout, srcFile, opts.getLong(OPTION_OFFSET, 0), opts.getLong(OPTION_NUM_BYTES, -1), pi);
             }
-            pfds[1].close();
+            catch (IOException e)
+            {
+                if (!isBrokenPipe(e))
+                    throw e;
+                Logger.debug("Pipe reader closed before file copy completed");
+            }
+            finally
+            {
+                closeQuietly(pfds[1]);
+            }
             s.onComplete();
         }).
                 subscribeOn(Schedulers.newThread()).
                 subscribe(() -> {
                 }, Logger::log);
         return pfds[0];
+    }
+
+    /**
+     * Invalidates cached file metadata and notifies both content and documents Uris.
+     * Call this after external writers update a provider-backed file.
+     */
+    public static void notifyLocationChanged(Context context, Location loc)
+    {
+        if (context == null || loc == null)
+            return;
+        try
+        {
+            ExtendedFileInfoLoader.getInstance().discardCache(loc, loc.getCurrentPath());
+            context.getContentResolver().notifyChange(getContentUriFromLocation(loc), null);
+            context.getContentResolver().notifyChange(ContainersDocumentProviderBase.getUriFromLocation(loc), null);
+
+            Path parentPath = loc.getCurrentPath().getParentPath();
+            if (parentPath != null)
+            {
+                Location parentLoc = loc.copy();
+                parentLoc.setCurrentPath(parentPath);
+                context.getContentResolver().notifyChange(getContentUriFromLocation(parentLoc), null);
+                context.getContentResolver().notifyChange(ContainersDocumentProviderBase.getUriFromLocation(parentLoc), null);
+            }
+        }
+        catch (IOException e)
+        {
+            Logger.log(e);
+        }
+    }
+
+    /**
+     * Returns true when a pipe write failed because the reader closed its end.
+     * Many clients stop reading early after they have consumed enough data.
+     */
+    private static boolean isBrokenPipe(Throwable e)
+    {
+        while (e != null)
+        {
+            if (e instanceof ErrnoException && ((ErrnoException) e).errno == OsConstants.EPIPE)
+                return true;
+            String message = e.getMessage();
+            if (message != null && message.contains("EPIPE"))
+                return true;
+            e = e.getCause();
+        }
+        return false;
+    }
+
+    /**
+     * Closes a pipe endpoint during cleanup without replacing the original failure.
+     */
+    private static void closeQuietly(ParcelFileDescriptor pfd)
+    {
+        try
+        {
+            pfd.close();
+        }
+        catch (IOException ignored)
+        {
+        }
     }
 
     public static Uri getContentUriFromLocation(Location loc, Path path)

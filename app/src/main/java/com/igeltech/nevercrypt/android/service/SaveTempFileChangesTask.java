@@ -4,11 +4,13 @@ import android.content.Intent;
 
 import com.igeltech.nevercrypt.android.R;
 import com.igeltech.nevercrypt.android.helpers.TempFilesMonitor;
+import com.igeltech.nevercrypt.android.providers.MainContentProviderBase;
 import com.igeltech.nevercrypt.android.settings.UserSettings;
 import com.igeltech.nevercrypt.fs.Directory;
 import com.igeltech.nevercrypt.fs.File;
 import com.igeltech.nevercrypt.fs.Path;
 import com.igeltech.nevercrypt.fs.util.SrcDstCollection;
+import com.igeltech.nevercrypt.locations.Location;
 
 import java.io.IOException;
 
@@ -30,7 +32,12 @@ class SaveTempFileChangesTask extends CopyFilesTask
         {
             Path dstPath = calcDstPath(record.getSrcLocation().getCurrentPath().getFile(), record.getDstLocation().getCurrentPath().getDirectory());
             if (dstPath != null && dstPath.isFile())
+            {
                 TempFilesMonitor.getMonitor(_context).updateMonitoredInfo(record.getSrcLocation(), dstPath.getFile().getLastModified());
+                Location savedLocation = record.getDstLocation().copy();
+                savedLocation.setCurrentPath(dstPath);
+                MainContentProviderBase.notifyLocationChanged(_context, savedLocation);
+            }
             return true;
         }
         else
