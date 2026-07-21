@@ -1,5 +1,9 @@
+#include <errno.h>
+#include <fcntl.h>
 #include <inttypes.h>
+#include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include <asm/errno.h>
 #include <android/log.h>
 #include <exfat.h>
@@ -39,6 +43,28 @@ static jfieldID FileName;
 
 static jmethodID CollectionAdd;
 
+/* Fill the whole buffer from a kernel CSPRNG. read() may legally return fewer
+   bytes than requested, so keep reading until len bytes are available. */
+static int read_secure_random(int fd, uint8_t *buf, size_t len)
+{
+    size_t offset = 0;
+    while (offset < len)
+    {
+        ssize_t bytes_read = read(fd, buf + offset, len - offset);
+        if (bytes_read < 0)
+        {
+            /* Signals can interrupt read(); retry instead of failing wipe. */
+            if (errno == EINTR)
+                continue;
+            return -errno;
+        }
+        /* /dev/urandom should not return EOF while len bytes are pending. */
+        if (bytes_read == 0)
+            return -EIO;
+        offset += (size_t) bytes_read;
+    }
+    return 0;
+}
 
 static jint cache_classes(JNIEnv *env)
 {
@@ -593,22 +619,40 @@ Java_com_igeltech_nevercrypt_fs_exfat_ExFat_randFreeSpace(JNIEnv *env, jobject i
     if(!buf)
         return -1;
 
-    srand((unsigned int) time(NULL));
+    /* Use the kernel random source instead of rand(); O_CLOEXEC avoids leaking
+       the descriptor if this process ever executes another binary. */
+    int random_fd = open("/dev/urandom", O_RDONLY | O_CLOEXEC);
+    if (random_fd < 0)
+    {
+        int err = -errno;
+        free(buf);
+        return err;
+    }
+
     for (uint32_t  i = 0; i < ef->cmap.size; i++)
         if (BMAP_GET(ef->cmap.chunk, i) == 0)
         {
-            for(int j=0;j<cluster_size;j++)
-                buf[j] = (uint8_t) (rand() % 256);
+            /* Generate fresh random data for every free cluster before
+               overwriting it. */
+            int random_res = read_secure_random(random_fd, buf, cluster_size);
+            if (random_res != 0)
+            {
+                close(random_fd);
+                free(buf);
+                return random_res;
+            }
 
             uint32_t cluster = i + EXFAT_FIRST_DATA_CLUSTER;
             if (exfat_pwrite(ef->dev, buf, cluster_size,
                              exfat_c2o(ef, cluster)) < 0)
             {
                 exfat_error("failed to write cluster %#x", cluster);
+                close(random_fd);
                 free(buf);
                 return -EIO;
             }
         }
+    close(random_fd);
     free(buf);
     return 0;
 }
