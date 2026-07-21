@@ -133,7 +133,14 @@ public abstract class ContainerBase implements Closeable
         if (_layout == null)
             throw new IOException("The container is closed");
         EncryptionEngine enc = _layout.getEngine();
-        return allowLocalXTS() ? new LocalEncryptedFileXTS(_pathToContainer.getPathString(), isReadOnly, _layout.getEncryptedDataOffset(), (XTS) enc) : new EncryptedFileWithCache(_pathToContainer, isReadOnly ? AccessMode.Read : AccessMode.ReadWrite, _layout);
+        return allowLocalXTS()
+                ? new LocalEncryptedFileXTS(
+                _pathToContainer.getPathString(),
+                isReadOnly,
+                _layout.getEncryptedDataOffset(),
+                _layout.getEncryptedDataSize(_pathToContainer.getFile().getSize()),
+                (XTS) enc)
+                : new EncryptedFileWithCache(_pathToContainer, isReadOnly ? AccessMode.Read : AccessMode.ReadWrite, _layout);
     }
 
     public synchronized FileSystem getEncryptedFS(boolean isReadOnly) throws IOException, UserException

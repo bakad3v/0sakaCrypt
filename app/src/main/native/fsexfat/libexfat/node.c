@@ -117,6 +117,16 @@ static int write_entries(struct exfat* ef, struct exfat_node* dir,
 	return -EIO;
 }
 
+static int write_end_marker(struct exfat* ef, struct exfat_node* dir,
+		off64_t offset)
+{
+	struct exfat_entry entry;
+
+	/* Entry type 0x00 terminates an exFAT directory. */
+	memset(&entry, 0, sizeof(entry));
+	return write_entries(ef, dir, &entry, 1, offset);
+}
+
 static struct exfat_node* allocate_node(void)
 {
 	struct exfat_node* node = malloc(sizeof(struct exfat_node));
@@ -403,6 +413,10 @@ static int readdir(struct exfat* ef, struct exfat_node* parent,
 
 		switch (entry.type)
 		{
+		case EXFAT_ENTRY_END:
+			/* 0x00 is the logical directory end, not a deleted entry. */
+			return -ENOENT;
+
 		case EXFAT_ENTRY_FILE:
 			meta1 = (const struct exfat_entry_meta1*) &entry;
 			return parse_file_entry(ef, parent, node, offset,
@@ -813,16 +827,49 @@ static int check_slot(struct exfat* ef, struct exfat_node* dir, off64_t offset,
 	return 0;
 }
 
+static int find_directory_end(struct exfat* ef, struct exfat_node* dir,
+		off64_t* offset)
+{
+	struct exfat_entry entry;
+	int rc;
+
+	/* Return code reports only read status: 0 means that the append point
+	   was found without I/O errors. The append point itself is returned via
+	   *offset. If a 0x00 entry exists, *offset points to it; otherwise
+	   *offset becomes dir->size and the caller appends at the physical end.
+	   Entries after the first 0x00 are outside the logical directory. */
+	for (*offset = 0; *offset < dir->size; *offset += sizeof(entry))
+	{
+		rc = read_entries(ef, dir, &entry, 1, *offset);
+		if (rc != 0)
+			return rc;
+		if (entry.type == EXFAT_ENTRY_END)
+			return 0;
+	}
+	/* No 0x00 marker was present in the allocated directory range; *offset
+	   is dir->size here. */
+	return 0;
+}
+
 static int find_slot(struct exfat* ef, struct exfat_node* dir,
-		off64_t* offset, int n)
+		off64_t* offset, int n, bool* at_end)
 {
 	bitmap_t* dmap;
 	struct exfat_node* p;
+	off64_t end_offset;
+	size_t end_entries;
 	size_t i;
+	int rc;
 	int contiguous = 0;
 
 	if (!dir->is_cached)
 		exfat_bug("directory is not cached");
+	*at_end = false;
+
+	rc = find_directory_end(ef, dir, &end_offset);
+	if (rc != 0)
+		return rc;
+	end_entries = end_offset / sizeof(struct exfat_entry);
 
 	/* build a bitmap of valid entries in the directory */
 	dmap = calloc(BMAP_SIZE(dir->size / sizeof(struct exfat_entry)),
@@ -834,11 +881,16 @@ static int find_slot(struct exfat* ef, struct exfat_node* dir,
 		return -ENOMEM;
 	}
 	for (p = dir->child; p != NULL; p = p->next)
+	{
+		/* Do not let stale entries after 0x00 affect future placement. */
+		if (p->entry_offset >= end_offset)
+			continue;
 		for (i = 0; i < 1 + p->continuations; i++)
 			BMAP_SET(dmap, p->entry_offset / sizeof(struct exfat_entry) + i);
+	}
 
-	/* find a slot in the directory entries bitmap */
-	for (i = 0; i < dir->size / sizeof(struct exfat_entry); i++)
+	/* find a slot before the end-of-directory marker */
+	for (i = 0; i < end_entries; i++)
 	{
 		if (BMAP_GET(dmap, i) == 0)
 		{
@@ -865,17 +917,19 @@ static int find_slot(struct exfat* ef, struct exfat_node* dir,
 	}
 	free(dmap);
 
-	/* no suitable slots found, extend the directory */
-	if (contiguous == 0)
-		*offset = dir->size;
+	/* Reuse the terminator slot; never append after the old 0x00 marker. */
+	*offset = end_offset;
+	*at_end = true;
+	if (end_offset + sizeof(struct exfat_entry[n + 1]) <= dir->size)
+		return 0;
 	return exfat_truncate(ef, dir,
-			ROUND_UP(dir->size + sizeof(struct exfat_entry[n - contiguous]),
+			ROUND_UP(end_offset + sizeof(struct exfat_entry[n + 1]),
 					CLUSTER_SIZE(*ef->sb)),
 			true);
 }
 
 static int commit_entry(struct exfat* ef, struct exfat_node* dir,
-		const le16_t* name, off64_t offset, uint16_t attrib)
+		const le16_t* name, off64_t offset, uint16_t attrib, bool at_end)
 {
 	struct exfat_node* node;
 	const size_t name_length = utf16_length(name);
@@ -918,6 +972,13 @@ static int commit_entry(struct exfat* ef, struct exfat_node* dir,
 	rc = write_entries(ef, dir, entries, 2 + name_entries, offset);
 	if (rc != 0)
 		return rc;
+	if (at_end)
+	{
+		rc = write_end_marker(ef, dir,
+				offset + sizeof(struct exfat_entry[2 + name_entries]));
+		if (rc != 0)
+			return rc;
+	}
 
 	node = allocate_node();
 	if (node == NULL)
@@ -937,6 +998,7 @@ static int create(struct exfat* ef, const char* path, uint16_t attrib)
 	struct exfat_node* existing;
 	off64_t offset = -1;
 	le16_t name[EXFAT_NAME_MAX + 1];
+	bool at_end = false;
 	int rc;
 
 	rc = exfat_split(ef, &dir, &existing, name, path);
@@ -950,13 +1012,13 @@ static int create(struct exfat* ef, const char* path, uint16_t attrib)
 	}
 
 	rc = find_slot(ef, dir, &offset,
-			2 + DIV_ROUND_UP(utf16_length(name), EXFAT_ENAME_MAX));
+			2 + DIV_ROUND_UP(utf16_length(name), EXFAT_ENAME_MAX), &at_end);
 	if (rc != 0)
 	{
 		exfat_put_node(ef, dir);
 		return rc;
 	}
-	rc = commit_entry(ef, dir, name, offset, attrib);
+	rc = commit_entry(ef, dir, name, offset, attrib, at_end);
 	if (rc != 0)
 	{
 		exfat_put_node(ef, dir);
@@ -1004,7 +1066,8 @@ int exfat_mkdir(struct exfat* ef, const char* path)
 }
 
 static int rename_entry(struct exfat* ef, struct exfat_node* dir,
-		struct exfat_node* node, const le16_t* name, off64_t new_offset)
+		struct exfat_node* node, const le16_t* name, off64_t new_offset,
+		bool at_end)
 {
 	const size_t name_length = utf16_length(name);
 	const int name_entries = DIV_ROUND_UP(name_length, EXFAT_ENAME_MAX);
@@ -1044,6 +1107,13 @@ static int rename_entry(struct exfat* ef, struct exfat_node* dir,
 	rc = write_entries(ef, dir, entries, 2 + name_entries, new_offset);
 	if (rc != 0)
 		return rc;
+	if (at_end)
+	{
+		rc = write_end_marker(ef, dir,
+				new_offset + sizeof(struct exfat_entry[2 + name_entries]));
+		if (rc != 0)
+			return rc;
+	}
 
 	memcpy(node->name, name, (EXFAT_NAME_MAX + 1) * sizeof(le16_t));
 	tree_detach(node);
@@ -1058,6 +1128,7 @@ int exfat_rename(struct exfat* ef, const char* old_path, const char* new_path)
 	struct exfat_node* dir;
 	off64_t offset = -1;
 	le16_t name[EXFAT_NAME_MAX + 1];
+	bool at_end = false;
 	int rc;
 
 	rc = exfat_lookup(ef, &node, old_path);
@@ -1129,14 +1200,14 @@ int exfat_rename(struct exfat* ef, const char* old_path, const char* new_path)
 	}
 
 	rc = find_slot(ef, dir, &offset,
-			2 + DIV_ROUND_UP(utf16_length(name), EXFAT_ENAME_MAX));
+			2 + DIV_ROUND_UP(utf16_length(name), EXFAT_ENAME_MAX), &at_end);
 	if (rc != 0)
 	{
 		exfat_put_node(ef, dir);
 		exfat_put_node(ef, node);
 		return rc;
 	}
-	rc = rename_entry(ef, dir, node, name, offset);
+	rc = rename_entry(ef, dir, node, name, offset, at_end);
 	if (rc != 0)
 	{
 		exfat_put_node(ef, dir);
@@ -1185,6 +1256,8 @@ static int find_label(struct exfat* ef, off64_t* offset)
 		if (rc != 0)
 			return rc;
 
+		if (entry.type == EXFAT_ENTRY_END)
+			return -ENOENT;
 		if (entry.type == EXFAT_ENTRY_LABEL)
 			return 0;
 	}
@@ -1195,6 +1268,7 @@ int exfat_set_label(struct exfat* ef, const char* label)
 	le16_t label_utf16[EXFAT_ENAME_MAX + 1];
 	int rc;
 	off64_t offset;
+	bool at_end = false;
 	struct exfat_entry_label entry;
 
 	memset(label_utf16, 0, sizeof(label_utf16));
@@ -1204,7 +1278,7 @@ int exfat_set_label(struct exfat* ef, const char* label)
 
 	rc = find_label(ef, &offset);
 	if (rc == -ENOENT)
-		rc = find_slot(ef, ef->root, &offset, 1);
+		rc = find_slot(ef, ef->root, &offset, 1, &at_end);
 	if (rc != 0)
 		return rc;
 
@@ -1217,6 +1291,13 @@ int exfat_set_label(struct exfat* ef, const char* label)
 	rc = write_entries(ef, ef->root, (struct exfat_entry*) &entry, 1, offset);
 	if (rc != 0)
 		return rc;
+	if (at_end)
+	{
+		rc = write_end_marker(ef, ef->root,
+				offset + sizeof(struct exfat_entry));
+		if (rc != 0)
+			return rc;
+	}
 
 	strcpy(ef->label, label);
 	return 0;

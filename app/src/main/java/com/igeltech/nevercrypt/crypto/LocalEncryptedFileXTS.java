@@ -3,7 +3,6 @@ package com.igeltech.nevercrypt.crypto;
 import com.igeltech.nevercrypt.crypto.modes.XTS;
 import com.igeltech.nevercrypt.fs.RandomAccessIO;
 
-import java.io.File;
 import java.io.IOException;
 
 public class LocalEncryptedFileXTS implements RandomAccessIO
@@ -15,13 +14,13 @@ public class LocalEncryptedFileXTS implements RandomAccessIO
 
     private final byte[] _oneByteBuf = new byte[1];
     private final long _dataOffset;
-    private final File _file;
+    private final long _dataSize;
     private long _contextPointer;
 
-    public LocalEncryptedFileXTS(String pathToFile, boolean readOnly, long dataOffset, XTS xts) throws IOException
+    public LocalEncryptedFileXTS(String pathToFile, boolean readOnly, long dataOffset, long dataSize, XTS xts) throws IOException
     {
-        _file = new File(pathToFile);
         _dataOffset = dataOffset;
+        _dataSize = dataSize;
         _contextPointer = initContext(pathToFile, readOnly, xts.getXTSContextPointer());
         if (_contextPointer == 0)
             throw new IOException("Context initialization failed");
@@ -35,8 +34,6 @@ public class LocalEncryptedFileXTS implements RandomAccessIO
     private static native long getPosition(long contextPointer);
 
     private static native void seek(long contextPointer, long newPosition);
-
-    private static native int ftruncate(long contextPointer, long newLength);
 
     private static native long initContext(String pathToFile, boolean readOnly, long xtsContext);
 
@@ -72,7 +69,7 @@ public class LocalEncryptedFileXTS implements RandomAccessIO
     @Override
     public long length() throws IOException
     {
-        return _file.length() - _dataOffset;
+        return _dataSize;
     }
 
     @Override
@@ -88,7 +85,13 @@ public class LocalEncryptedFileXTS implements RandomAccessIO
             throw new IndexOutOfBoundsException();
         if (_contextPointer == 0)
             throw new IOException("File is closed");
-        int res = read(_contextPointer, b, off, len);
+        if (len == 0)
+            return 0;
+        long position = getFilePointer();
+        if (position >= _dataSize)
+            return -1;
+        int boundedLen = (int) Math.min(len, _dataSize - position);
+        int res = read(_contextPointer, b, off, boundedLen);
         if (res < 0)
             throw new IOException("Failed reading data");
         return res;
@@ -108,6 +111,8 @@ public class LocalEncryptedFileXTS implements RandomAccessIO
             throw new IndexOutOfBoundsException();
         if (_contextPointer == 0)
             throw new IOException("File is closed");
+        if (getFilePointer() + len > _dataSize)
+            throw new IOException("Write outside encrypted volume bounds");
         if (write(_contextPointer, b, off, len) != 0)
             throw new IOException("Failed writing data");
     }
@@ -125,10 +130,8 @@ public class LocalEncryptedFileXTS implements RandomAccessIO
     {
         if (_contextPointer == 0)
             throw new IOException("File is closed");
-        if (newLength < 0)
-            throw new IllegalArgumentException("newLength < 0");
-        if (ftruncate(_contextPointer, newLength + _dataOffset) != 0)
-            throw new IOException("Failed truncating file");
+        if (newLength != _dataSize)
+            throw new IOException("Cannot resize encrypted volume");
         long filePointer = getFilePointer();
         if (filePointer > newLength)
             seek(newLength);
