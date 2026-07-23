@@ -132,6 +132,11 @@ public class FileManagerFragment extends RxFragment implements PreviewFragment.H
         return _currentLocation;
     }
 
+    void setLocation(Location location)
+    {
+        _currentLocation = location;
+    }
+
     public boolean hasSelectedFiles()
     {
         FileListDataFragment f = getFileListDataFragment();
