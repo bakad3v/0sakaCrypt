@@ -39,8 +39,6 @@ public class ImageViewerActivity extends AppCompatActivity implements PreviewFra
     {
         super.onCreate(savedInstanceState);
         UserSettings us = UserSettings.getSettings(this);
-        if (us.isFlagSecureEnabled())
-            CompatHelper.setWindowFlagSecure(this);
         if (us.isImageViewerFullScreenModeEnabled())
             enableFullScreen();
         _location = LocationsManager.getLocationsManager(this).getFromIntent(getIntent(), null);

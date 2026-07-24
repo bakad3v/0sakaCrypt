@@ -20,8 +20,6 @@ import com.igeltech.nevercrypt.android.R;
 import com.igeltech.nevercrypt.android.activities.EdgeToEdgeToolbarActivity;
 import com.igeltech.nevercrypt.android.filemanager.tasks.CheckStartPathTask;
 import com.igeltech.nevercrypt.android.helpers.AppInitHelper;
-import com.igeltech.nevercrypt.android.helpers.CompatHelper;
-import com.igeltech.nevercrypt.android.settings.UserSettings;
 import com.igeltech.nevercrypt.locations.LocationsManager;
 import com.trello.rxlifecycle3.components.support.RxAppCompatActivity;
 
@@ -52,9 +50,6 @@ public class LocationManagerActivity extends RxAppCompatActivity implements Edge
         NavController navController = Navigation.findNavController(this, R.id.nav_host_locationmanager);
         appBarConfiguration = new AppBarConfiguration.Builder(navController.getGraph()).build();
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
-        // Security
-        if (UserSettings.getSettings(this).isFlagSecureEnabled())
-            CompatHelper.setWindowFlagSecure(this);
         Logger.debug("lm start activity: " + getIntent());
         // Register broadcasts
         ContextCompat.registerReceiver(this, _closeAllReceiver, new IntentFilter(LocationsManager.BROADCAST_CLOSE_ALL), ContextCompat.RECEIVER_EXPORTED);

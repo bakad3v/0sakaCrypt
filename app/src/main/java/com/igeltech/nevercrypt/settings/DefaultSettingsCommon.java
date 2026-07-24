@@ -153,7 +153,7 @@ public class DefaultSettingsCommon implements SettingsCommon
     @Override
     public boolean isFlagSecureEnabled()
     {
-        return false;
+        return true;
     }
 
     @Override

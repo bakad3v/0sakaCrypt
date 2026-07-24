@@ -6,9 +6,6 @@ import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 
-import com.igeltech.nevercrypt.android.helpers.CompatHelper;
-import com.igeltech.nevercrypt.android.settings.UserSettings;
-
 public abstract class SettingsBaseActivity extends AppCompatActivity implements EdgeToEdgeToolbarActivity
 {
     public static final String SETTINGS_FRAGMENT_TAG = "com.igeltech.nevercrypt.android.locations.SETTINGS_FRAGMENT";
@@ -21,8 +18,6 @@ public abstract class SettingsBaseActivity extends AppCompatActivity implements 
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null)
             actionBar.setDisplayHomeAsUpEnabled(true);
-        if (UserSettings.getSettings(this).isFlagSecureEnabled())
-            CompatHelper.setWindowFlagSecure(this);
         if (savedInstanceState == null)
             getSupportFragmentManager().
                     beginTransaction().
