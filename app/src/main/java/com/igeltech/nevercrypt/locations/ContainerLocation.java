@@ -15,6 +15,16 @@ public interface ContainerLocation extends CryptoLocation
 
     List<ContainerFormatInfo> getSupportedFormats();
 
+    /**
+     * Sets a temporary encryption engine hint for the next container opening attempt.
+     */
+    void setOpeningEncryptionEngineHint(String cipherName, String cipherModeName);
+
+    /**
+     * Sets a temporary KDF/hash hint for the next container opening attempt.
+     */
+    void setOpeningHashFuncHint(String hashFuncName);
+
     interface ExternalSettings extends CryptoLocation.ExternalSettings
     {
         String getContainerFormatName();

@@ -198,6 +198,15 @@ public abstract class ContainerBase implements Closeable
         _encryptionEngineHintModeName = eng == null ? null : eng.getCipherModeName();
     }
 
+    /**
+     * Stores a cipher/mode hint by name so the concrete layout can resolve its own engine instance.
+     */
+    public void setEncryptionEngineHint(String cipherName, String modeName)
+    {
+        _encryptionEngineHintCipherName = cipherName;
+        _encryptionEngineHintModeName = modeName;
+    }
+
     public void setHashFuncHint(MessageDigest hf)
     {
         _messageDigest = hf;
@@ -264,8 +273,14 @@ public abstract class ContainerBase implements Closeable
             _progressReporter.setIsHidden(isHidden);
         }
         VolumeLayout vl = isHidden ? cf.getHiddenVolumeLayout() : cf.getVolumeLayout();
+        // Skip formats whose layout cannot use the selected one-shot KDF/hash hint.
+        if (hashFunc != null && !isHashFuncSupported(vl, hashFunc))
+            return false;
         vl.setOpeningProgressReporter(_progressReporter);
         FileEncryptionEngine encryptionEngineHint = useEncryptionEngineHint ? getEncryptionEngineHint(vl) : null;
+        // A selected cipher hint must match the current layout; otherwise this attempt is invalid.
+        if (useEncryptionEngineHint && encryptionEngineHint == null)
+            return false;
         if (encryptionEngineHint != null)
             vl.setEngine(encryptionEngineHint);
         if (hashFunc != null)
@@ -358,6 +373,14 @@ public abstract class ContainerBase implements Closeable
     protected boolean isSameHashFunc(MessageDigest lhs, MessageDigest rhs)
     {
         return lhs != null && rhs != null && lhs.getAlgorithm().equalsIgnoreCase(rhs.getAlgorithm());
+    }
+
+    /**
+     * Checks whether a layout advertises support for the selected KDF/hash hint.
+     */
+    protected boolean isHashFuncSupported(VolumeLayout layout, MessageDigest hashFunc)
+    {
+       return VolumeLayoutBase.findHashFunc(layout.getSupportedHashFuncs(), hashFunc.getAlgorithm()) != null;
     }
 
     protected Iterable<VolumeLayout> getLayouts(boolean isHidden)

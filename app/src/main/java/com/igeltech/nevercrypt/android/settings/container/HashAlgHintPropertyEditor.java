@@ -3,18 +3,17 @@ package com.igeltech.nevercrypt.android.settings.container;
 import com.igeltech.nevercrypt.android.R;
 import com.igeltech.nevercrypt.android.locations.fragments.ContainerSettingsFragment;
 import com.igeltech.nevercrypt.android.locations.fragments.ContainerSettingsFragmentBase;
-import com.igeltech.nevercrypt.android.settings.ChoiceDialogPropertyEditor;
 import com.igeltech.nevercrypt.container.ContainerFormatInfo;
 
 import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.List;
 
-public class HashAlgHintPropertyEditor extends ChoiceDialogPropertyEditor
+public class HashAlgHintPropertyEditor extends HashingAlgorithmPropertyEditorBase
 {
     public HashAlgHintPropertyEditor(ContainerSettingsFragmentBase containerSettingsFragment)
     {
-        super(containerSettingsFragment, R.string.hash_algorithm, R.string.hash_alg_desc, containerSettingsFragment.getTag());
+        super(containerSettingsFragment, R.string.hash_algorithm, R.string.hash_alg_desc, true);
     }
 
     @Override
@@ -24,58 +23,42 @@ public class HashAlgHintPropertyEditor extends ChoiceDialogPropertyEditor
     }
 
     @Override
-    protected void saveValue(int value)
+    protected List<MessageDigest> getCurrentHashAlgList()
     {
-        if (value == 0)
-            getHost().getLocation().getExternalSettings().setHashFuncName(null);
-        else
-            getHost().getLocation().getExternalSettings().setHashFuncName(getHashFuncName(getSupportedHashFuncs().get(value - 1)));
+        ContainerFormatInfo cfi = getHost().getCurrentContainerFormat();
+        return cfi != null ? cfi.getVolumeLayout().getSupportedHashFuncs() : new ArrayList<MessageDigest>();
+    }
+
+    @Override
+    protected boolean hasSavedHashFuncSelection()
+    {
+        String name = getHost().getLocation().getExternalSettings().getHashFuncName();
+        return name != null && !name.isEmpty();
+    }
+
+    @Override
+    protected int findSavedHashFuncIndex(List<MessageDigest> algs)
+    {
+        return findHashFuncIndexByName(algs, getHost().getLocation().getExternalSettings().getHashFuncName());
+    }
+
+    @Override
+    protected void saveHashFuncValue(MessageDigest hashFunc)
+    {
+        getHost().getLocation().getExternalSettings().setHashFuncName(hashFunc.getAlgorithm());
         getHost().saveExternalSettings();
     }
 
     @Override
-    protected int loadValue()
+    protected void saveAutoDetectValue()
     {
-        String name = getHost().getLocation().getExternalSettings().getHashFuncName();
-        if (name != null)
-        {
-            int i = findEngineIndexByName(name);
-            if (i >= 0)
-                return i + 1;
-        }
-        return 0;
+        getHost().getLocation().getExternalSettings().setHashFuncName(null);
+        getHost().saveExternalSettings();
     }
 
     @Override
-    protected ArrayList<String> getEntries()
+    protected String getHashFuncEntryName(MessageDigest md)
     {
-        ArrayList<String> entries = new ArrayList<>();
-        entries.add("-");
-        for (MessageDigest hf : getSupportedHashFuncs())
-            entries.add(getHashFuncName(hf));
-        return entries;
-    }
-
-    private String getHashFuncName(MessageDigest hf)
-    {
-        return hf.getAlgorithm();
-    }
-
-    private int findEngineIndexByName(String name)
-    {
-        int i = 0;
-        for (MessageDigest md : getSupportedHashFuncs())
-        {
-            if (name.equalsIgnoreCase(getHashFuncName(md)))
-                return i;
-            i++;
-        }
-        return -1;
-    }
-
-    private List<MessageDigest> getSupportedHashFuncs()
-    {
-        ContainerFormatInfo cfi = getHost().getCurrentContainerFormat();
-        return cfi != null ? cfi.getVolumeLayout().getSupportedHashFuncs() : new ArrayList<MessageDigest>();
+        return md.getAlgorithm();
     }
 }

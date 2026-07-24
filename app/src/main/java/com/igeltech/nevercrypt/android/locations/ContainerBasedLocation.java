@@ -27,7 +27,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.security.MessageDigest;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public class ContainerBasedLocation extends CryptoLocationBase implements ContainerLocation
@@ -89,16 +91,26 @@ public class ContainerBasedLocation extends CryptoLocationBase implements Contai
             cnt.setProgressReporter((ContainerOpeningProgressReporter) _openingProgressReporter);
         ContainerFormatInfo cfi = getContainerFormatInfo();
         if (cfi != null)
-        {
             cnt.setContainerFormat(cfi);
-            VolumeLayout vl = cfi.getVolumeLayout();
+        // One-shot opening hints from the password options override persistent saved hints.
+        String cipherName = getSharedData().openingCipherName;
+        String cipherModeName = getSharedData().openingCipherModeName;
+        if (cipherName != null && cipherModeName != null)
+            cnt.setEncryptionEngineHint(cipherName, cipherModeName);
+        else
+        {
             String name = getExternalSettings().getEncEngineName();
-            if (name != null && !name.isEmpty())
-                cnt.setEncryptionEngineHint((FileEncryptionEngine) VolumeLayoutBase.findEncEngineByName(vl.getSupportedEncryptionEngines(), name));
-            name = getExternalSettings().getHashFuncName();
-            if (name != null && !name.isEmpty())
-                cnt.setHashFuncHint(VolumeLayoutBase.findHashFunc(vl.getSupportedHashFuncs(), name));
+            FileEncryptionEngine encEngineHint = findEncryptionEngineByName(cfi, name);
+            if (encEngineHint != null)
+                cnt.setEncryptionEngineHint(encEngineHint);
         }
+        // The temporary KDF/hash hint falls back to the saved container hint when it is not set.
+        String hashFuncName = getSharedData().openingHashFuncName;
+        if (hashFuncName == null || hashFuncName.isEmpty())
+            hashFuncName = getExternalSettings().getHashFuncName();
+        MessageDigest hashFuncHint = findHashFuncByName(cfi, hashFuncName);
+        if (hashFuncHint != null)
+            cnt.setHashFuncHint(hashFuncHint);
         int numKDFIterations = getSelectedKDFIterations();
         if (numKDFIterations > 0)
             cnt.setNumKDFIterations(numKDFIterations);
@@ -196,6 +208,27 @@ public class ContainerBasedLocation extends CryptoLocationBase implements Contai
         return Container.getSupportedFormats();
     }
 
+    /**
+     * Stores a temporary encryption engine hint used only by the next open() call.
+     */
+    @Override
+    public void setOpeningEncryptionEngineHint(String cipherName, String cipherModeName)
+    {
+        getSharedData().openingCipherName = cipherName == null || cipherName.isEmpty() || cipherModeName == null || cipherModeName.isEmpty()
+                ? null
+                : cipherName;
+        getSharedData().openingCipherModeName = getSharedData().openingCipherName == null ? null : cipherModeName;
+    }
+
+    /**
+     * Stores a temporary KDF/hash hint used only by the next open() call.
+     */
+    @Override
+    public void setOpeningHashFuncHint(String hashFuncName)
+    {
+        getSharedData().openingHashFuncName = hashFuncName == null || hashFuncName.isEmpty() ? null : hashFuncName;
+    }
+
     @Override
     protected SharedData getSharedData()
     {
@@ -211,6 +244,47 @@ public class ContainerBasedLocation extends CryptoLocationBase implements Contai
     {
         String name = getExternalSettings().getContainerFormatName();
         return name != null ? Container.findFormatByName(name) : null;
+    }
+
+    /**
+     * Resolves a saved hint against the selected format, or all supported formats when format is unknown.
+     */
+    protected FileEncryptionEngine findEncryptionEngineByName(ContainerFormatInfo selectedFormat, String encEngineName)
+    {
+        if (encEngineName == null || encEngineName.isEmpty())
+            return null;
+        for (ContainerFormatInfo cfi : getCandidateFormats(selectedFormat))
+        {
+            VolumeLayout vl = cfi.getVolumeLayout();
+            FileEncryptionEngine ee = (FileEncryptionEngine) VolumeLayoutBase.findEncEngineByName(vl.getSupportedEncryptionEngines(), encEngineName);
+            if (ee != null)
+                return ee;
+        }
+        return null;
+    }
+
+    /**
+     * Resolves a saved or one-shot KDF/hash hint against candidate container formats.
+     */
+    protected MessageDigest findHashFuncByName(ContainerFormatInfo selectedFormat, String hashFuncName)
+    {
+        if (hashFuncName == null || hashFuncName.isEmpty())
+            return null;
+        for (ContainerFormatInfo cfi : getCandidateFormats(selectedFormat))
+        {
+            MessageDigest hashFunc = VolumeLayoutBase.findHashFunc(cfi.getVolumeLayout().getSupportedHashFuncs(), hashFuncName);
+            if (hashFunc != null)
+                return hashFunc;
+        }
+        return null;
+    }
+
+    /**
+     * Limits hint resolution to the known container format when the user has selected one.
+     */
+    protected List<ContainerFormatInfo> getCandidateFormats(ContainerFormatInfo selectedFormat)
+    {
+        return selectedFormat != null ? Collections.singletonList(selectedFormat) : getSupportedFormats();
     }
 
     @Override
@@ -320,6 +394,8 @@ public class ContainerBasedLocation extends CryptoLocationBase implements Contai
     protected static class SharedData extends CryptoLocationBase.SharedData
     {
         public Container container;
+        // Temporary hints populated from the opening options screen for the next open() call.
+        public String openingCipherName, openingCipherModeName, openingHashFuncName;
 
         public SharedData(String id, CryptoLocationBase.InternalSettings settings, Location location, Context context)
         {

@@ -25,7 +25,6 @@ public abstract class CreateContainerTaskFragmentBase extends CreateLocationTask
 {
     public static final String ARG_CONTAINER_FORMAT = "com.igeltech.nevercrypt.android.CONTAINER_FORMAT";
     public static final String ARG_CIPHER_MODE_NAME = "com.igeltech.nevercrypt.android.CIPHER_MODE_NAME";
-    public static final String ARG_HASHING_ALG = "com.igeltech.nevercrypt.android.HASHING_ALG";
     public static final String ARG_SIZE = "com.igeltech.nevercrypt.android.SIZE";
     public static final String ARG_FILL_FREE_SPACE = "com.igeltech.nevercrypt.android.FILL_FREE_SPACE";
     public static final String ARG_FILL_FREE_SPACE_USER_SET = "com.igeltech.nevercrypt.android.FILL_FREE_SPACE_USER_SET";
@@ -69,11 +68,11 @@ public abstract class CreateContainerTaskFragmentBase extends CreateLocationTask
         FileSystemInfo fst = args.getParcelable(ARG_FILE_SYSTEM_TYPE);
         if (fst != null)
             cf.setFileSystemType(fst);
-        String encAlgName = args.getString(ARG_CIPHER_NAME);
-        String encModeName = args.getString(ARG_CIPHER_MODE_NAME);
+        String encAlgName = args.getString(Openable.PARAM_CIPHER_NAME);
+        String encModeName = args.getString(Openable.PARAM_CIPHER_MODE_NAME);
         if (encAlgName != null && encModeName != null)
             cf.setEncryptionEngine(encAlgName, encModeName);
-        String hashAlgName = args.getString(ARG_HASHING_ALG);
+        String hashAlgName = args.getString(Openable.PARAM_HASHING_ALG);
         if (hashAlgName != null)
             cf.setHashFunc(hashAlgName);
         boolean createHiddenVolume = args.getBoolean(ARG_CREATE_HIDDEN_VOLUME, false);
