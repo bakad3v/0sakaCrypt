@@ -49,7 +49,8 @@ public class CloseAllContainersWidget extends AppWidgetProvider
     public void onReceive(@NonNull Context context, @NonNull Intent intent)
     {
         super.onReceive(context, intent);
-        if (LocationsManager.BROADCAST_LOCATION_CHANGED.equals(intent.getAction()))
+        String action = intent.getAction();
+        if (LocationsManager.BROADCAST_LOCATION_CHANGED.equals(action) || LocationsManager.BROADCAST_ALL_CONTAINERS_CLOSED.equals(action))
             setWidgetsState(context);
     }
 

@@ -47,7 +47,7 @@ public class LoadedImage
     {
         return Single.create(emitter -> {
             PowerManager pm = (PowerManager) context.getApplicationContext().getSystemService(Context.POWER_SERVICE);
-            PowerManager.WakeLock wl = pm == null ? null : pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "LoadImageTask");
+            PowerManager.WakeLock wl = pm == null ? null : pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "0sakacrypt:LoadImageTask");
             if (wl != null)
                 wl.acquire(10000);
             try

@@ -35,6 +35,7 @@ android {
     buildTypes {
         release {
             minifyEnabled true
+            shrinkResources = true
         }
         debug {
             externalNativeBuild {

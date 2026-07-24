@@ -85,9 +85,9 @@ public abstract class LocationListBaseFragment extends ListFragment
     public void onResume()
     {
         super.onResume();
-        ContextCompat.registerReceiver(getActivity(), _reloadLocationsReceiver, new IntentFilter(LocationsManager.BROADCAST_LOCATION_CHANGED), ContextCompat.RECEIVER_EXPORTED);
-        ContextCompat.registerReceiver(getActivity(), _reloadLocationsReceiver, new IntentFilter(LocationsManager.BROADCAST_LOCATION_REMOVED), ContextCompat.RECEIVER_EXPORTED);
-        ContextCompat.registerReceiver(getActivity(), _reloadLocationsReceiver, new IntentFilter(LocationsManager.BROADCAST_LOCATION_CREATED), ContextCompat.RECEIVER_EXPORTED);
+        ContextCompat.registerReceiver(getActivity(), _reloadLocationsReceiver, new IntentFilter(LocationsManager.BROADCAST_LOCATION_CHANGED), ContextCompat.RECEIVER_NOT_EXPORTED);
+        ContextCompat.registerReceiver(getActivity(), _reloadLocationsReceiver, new IntentFilter(LocationsManager.BROADCAST_LOCATION_REMOVED), ContextCompat.RECEIVER_NOT_EXPORTED);
+        ContextCompat.registerReceiver(getActivity(), _reloadLocationsReceiver, new IntentFilter(LocationsManager.BROADCAST_LOCATION_CREATED), ContextCompat.RECEIVER_NOT_EXPORTED);
         loadLocations();
     }
 

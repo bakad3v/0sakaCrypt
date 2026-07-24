@@ -53,7 +53,7 @@ public class FileManagerActivity extends RxAppCompatActivity implements EdgeToEd
     {
         super.onStart();
         // Broadcasts
-        ContextCompat.registerReceiver(this, _closeAllReceiver, new IntentFilter(LocationsManager.BROADCAST_ALL_CONTAINERS_CLOSED), ContextCompat.RECEIVER_EXPORTED);
+        ContextCompat.registerReceiver(this, _closeAllReceiver, new IntentFilter(LocationsManager.BROADCAST_ALL_CONTAINERS_CLOSED), ContextCompat.RECEIVER_NOT_EXPORTED);
         Logger.debug("FileManagerFragment has started");
     }
 

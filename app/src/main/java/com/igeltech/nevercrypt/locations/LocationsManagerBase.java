@@ -17,6 +17,8 @@ import com.igeltech.nevercrypt.android.locations.TrueCryptLocation;
 import com.igeltech.nevercrypt.android.locations.VeraCryptLocation;
 import com.igeltech.nevercrypt.android.locations.closer.fragments.OpenableLocationCloserFragment;
 import com.igeltech.nevercrypt.android.settings.UserSettings;
+import com.igeltech.nevercrypt.android.widgets.CloseAllContainersWidget;
+import com.igeltech.nevercrypt.android.widgets.LocationShortcutWidget;
 import com.igeltech.nevercrypt.fs.Path;
 import com.igeltech.nevercrypt.fs.util.Util;
 import com.igeltech.nevercrypt.settings.Settings;
@@ -195,7 +197,9 @@ public abstract class LocationsManagerBase
         Intent i = new Intent(BROADCAST_LOCATION_CHANGED);
         //i.setData(location.getLocationUri());
         i.putExtra(PARAM_LOCATION_URI, location.getLocationUri());
-        context.sendBroadcast(i);
+        sendInternalBroadcast(context, i);
+        sendExplicitBroadcast(context, i, LocationShortcutWidget.class);
+        sendExplicitBroadcast(context, i, CloseAllContainersWidget.class);
     }
 
     public static void broadcastLocationAdded(Context context, Location location)
@@ -204,7 +208,7 @@ public abstract class LocationsManagerBase
         //i.setData(location.getLocationUri());
         if (location != null)
             i.putExtra(PARAM_LOCATION_URI, location.getLocationUri());
-        context.sendBroadcast(i);
+        sendInternalBroadcast(context, i);
     }
 
     public static void broadcastLocationRemoved(Context context, Location location)
@@ -213,12 +217,25 @@ public abstract class LocationsManagerBase
         //i.setData(location.getLocationUri());
         if (location != null)
             i.putExtra(PARAM_LOCATION_URI, location.getLocationUri());
-        context.sendBroadcast(i);
+        sendInternalBroadcast(context, i);
     }
 
     public static void broadcastAllContainersClosed(Context context)
     {
-        context.sendBroadcast(new Intent(BROADCAST_ALL_CONTAINERS_CLOSED));
+        Intent i = new Intent(BROADCAST_ALL_CONTAINERS_CLOSED);
+        sendInternalBroadcast(context, i);
+        sendExplicitBroadcast(context, i, CloseAllContainersWidget.class);
+    }
+
+    private static void sendInternalBroadcast(Context context, Intent intent)
+    {
+        intent.setPackage(context.getPackageName());
+        context.sendBroadcast(intent);
+    }
+
+    private static void sendExplicitBroadcast(Context context, Intent intent, Class<?> receiverClass)
+    {
+        context.sendBroadcast(new Intent(intent).setClass(context, receiverClass));
     }
 
     public static ArrayList<Path> getPathsFromLocations(Iterable<? extends Location> locations) throws IOException

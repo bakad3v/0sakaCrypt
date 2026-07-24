@@ -52,7 +52,7 @@ public class LocationManagerActivity extends RxAppCompatActivity implements Edge
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
         Logger.debug("lm start activity: " + getIntent());
         // Register broadcasts
-        ContextCompat.registerReceiver(this, _closeAllReceiver, new IntentFilter(LocationsManager.BROADCAST_CLOSE_ALL), ContextCompat.RECEIVER_EXPORTED);
+        ContextCompat.registerReceiver(this, _closeAllReceiver, new IntentFilter(LocationsManager.BROADCAST_CLOSE_ALL), ContextCompat.RECEIVER_NOT_EXPORTED);
         // Check master password, if any
         AppInitHelper.
                 createObservable(this).

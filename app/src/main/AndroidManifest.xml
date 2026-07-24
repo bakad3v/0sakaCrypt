@@ -121,13 +121,10 @@
 
         <receiver
             android:name=".widgets.LocationShortcutWidget"
-            android:exported="true"
+            android:exported="false"
             android:label="@string/app_shortcut">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-            </intent-filter>
-            <intent-filter>
-                <action android:name="com.igeltech.nevercrypt.android.BROADCAST_LOCATION_CHANGED" />
             </intent-filter>
 
             <meta-data
@@ -136,22 +133,20 @@
         </receiver>
         <receiver
             android:name=".widgets.CloseAllContainersWidget"
-            android:exported="true"
+            android:exported="false"
             android:label="@string/close_all_containers">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-            </intent-filter>
-            <intent-filter>
-                <action android:name="com.igeltech.nevercrypt.android.BROADCAST_LOCATION_CHANGED" />
-            </intent-filter>
-            <intent-filter>
-                <action android:name="com.igeltech.nevercrypt.android.BROADCAST_ALL_CONTAINERS_CLOSED" />
             </intent-filter>
 
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/close_all_containers_widget_info" />
         </receiver>
+        <receiver
+            android:name="androidx.profileinstaller.ProfileInstallReceiver"
+            android:exported="false"
+            tools:replace="android:exported" />
 
         <provider
             android:name=".providers.MainContentProvider"

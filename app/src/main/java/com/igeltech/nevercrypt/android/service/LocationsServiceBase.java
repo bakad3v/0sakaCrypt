@@ -85,10 +85,10 @@ public class LocationsServiceBase extends Service
                     _locationsManager.closeAllLocations(true, false);
                 }
             };
-            registerReceiver(_shutdownReceiver, new IntentFilter(Intent.ACTION_SHUTDOWN));
-            ContextCompat.registerReceiver(this,_shutdownReceiver, new IntentFilter("android.intent.action.QUICKBOOT_POWEROFF"), ContextCompat.RECEIVER_EXPORTED);
+            ContextCompat.registerReceiver(this,_shutdownReceiver, new IntentFilter(Intent.ACTION_SHUTDOWN), ContextCompat.RECEIVER_NOT_EXPORTED);
+            ContextCompat.registerReceiver(this,_shutdownReceiver, new IntentFilter("android.intent.action.QUICKBOOT_POWEROFF"), ContextCompat.RECEIVER_NOT_EXPORTED);
             _inactivityCheckReceiver = new InactivityCheckReceiver();
-            ContextCompat.registerReceiver(this,_inactivityCheckReceiver, new IntentFilter(ACTION_CHECK_INACTIVE_LOCATION), ContextCompat.RECEIVER_EXPORTED);
+            ContextCompat.registerReceiver(this,_inactivityCheckReceiver, new IntentFilter(ACTION_CHECK_INACTIVE_LOCATION), ContextCompat.RECEIVER_NOT_EXPORTED);
         }
         catch (Exception e)
         {
