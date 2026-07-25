@@ -1,5 +1,8 @@
 package com.igeltech.nevercrypt.android.settings.container;
 
+import android.view.View;
+import android.view.ViewGroup;
+
 import com.igeltech.nevercrypt.android.R;
 import com.igeltech.nevercrypt.android.settings.fragments.OpeningOptionsFragmentBase;
 import com.igeltech.nevercrypt.container.ContainerFormatInfo;
@@ -42,6 +45,17 @@ public class OpeningEncryptionAlgorithmPropertyEditor extends EncryptionAlgorith
     protected OpeningOptionsFragmentBase getHostFragment()
     {
         return (OpeningOptionsFragmentBase) getHost();
+    }
+
+    /**
+     * Initializes dynamically shown hidden-volume rows immediately; this editor has no load side effects.
+     */
+    @Override
+    public View createView(ViewGroup parent)
+    {
+        View view = super.createView(parent);
+        load();
+        return view;
     }
 
     /**
