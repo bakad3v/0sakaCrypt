@@ -124,8 +124,30 @@ struct exfat
 	uid_t uid;
 	gid_t gid;
 	int ro;
+	uint32_t cluster_count_limit; /* valid only when volume_size_limit is set */
+	off64_t volume_size_limit;    /* 0 means unrestricted */
 	bool noatime;
 };
+
+/* Cluster count visible to allocation and space accounting when a protected cap is active. */
+static inline uint32_t exfat_effective_cluster_count(const struct exfat* ef)
+{
+	uint32_t cluster_count = le32_to_cpu(ef->sb->cluster_count);
+	if (ef->volume_size_limit != 0 && ef->cluster_count_limit < cluster_count)
+		return ef->cluster_count_limit;
+	return cluster_count;
+}
+
+/* Final byte-level guard for direct writes that bypass node/cluster allocation. */
+static inline bool exfat_range_inside_volume_limit(const struct exfat* ef,
+		off64_t offset, size_t size)
+{
+	if (ef->volume_size_limit == 0)
+		return true;
+	if (offset < 0 || offset > ef->volume_size_limit)
+		return false;
+	return (uint64_t) size <= (uint64_t) (ef->volume_size_limit - offset);
+}
 
 /* in-core nodes iterator */
 struct exfat_iterator

@@ -35,6 +35,8 @@
     <string name="hidden_volume_hash_algorithm">Алгоритм хэширования пароля скрытого тома</string>
     <string name="hidden_volume_file_system_type">Файловая система скрытого тома</string>
     <string name="hidden_volume_kdf_iterations_multiplier">PIM скрытого тома</string>
+    <string name="protect_hidden_volume">Защитить скрытый том от повреждения</string>
+    <string name="protect_hidden_volume_desc">Использовать пароль скрытого тома, чтобы зарезервировать его область данных при открытии внешнего тома. Пароль не сохраняется.</string>
     <string name="create_new_container">Создать новый контейнер</string>
     <string name="cancel_task_confirmation">Вы уверены, что хотите отменить задачу?</string>
     <string name="yes">Да</string>
@@ -64,6 +66,7 @@
     <string name="err_hidden_volume_is_not_supported">Выбранный формат контейнера не поддерживает скрытые тома</string>
     <string name="err_hidden_volume_size_is_too_large">Размер скрытого тома слишком велик. Максимальный размер: %1$d МиБ.</string>
     <string name="err_hidden_volume_file_system_is_too_small">Размер скрытого тома слишком мал для выбранной файловой системы</string>
+    <string name="err_hidden_volume_protection_failed">Не удалось включить защиту скрытого тома. Проверьте пароль скрытого тома.</string>
     <string name="err_failed_processing_settings_file">Не удалось обработать файл настроек</string>
     <string name="err_failed_creating_container">Не удалось создать контейнер</string>
     <string name="about">О программе</string>

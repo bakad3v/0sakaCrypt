@@ -13,6 +13,10 @@ public interface Openable extends Location
     String PARAM_CIPHER_NAME = "com.igeltech.nevercrypt.android.CIPHER_NAME";
     String PARAM_CIPHER_MODE_NAME = "com.igeltech.nevercrypt.android.CIPHER_MODE_NAME";
     String PARAM_HASHING_ALG = "com.igeltech.nevercrypt.android.HASHING_ALG";
+    // One-shot opening flag used to enable hidden-volume write protection.
+    String PARAM_PROTECT_HIDDEN_VOLUME = "com.igeltech.nevercrypt.android.PROTECT_HIDDEN_VOLUME";
+    // One-shot hidden-volume password; it stays in SecureBuffer form until the opener consumes it.
+    String PARAM_HIDDEN_VOLUME_PASSWORD = "com.igeltech.nevercrypt.android.HIDDEN_VOLUME_PASSWORD";
 
     void setPassword(SecureBuffer pass);
 

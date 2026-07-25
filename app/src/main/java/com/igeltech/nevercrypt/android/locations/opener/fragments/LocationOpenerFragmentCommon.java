@@ -84,6 +84,9 @@ public class LocationOpenerFragmentCommon extends LocationOpenerBaseFragment imp
             copyStringParam(defaultArgs, args, Openable.PARAM_CIPHER_NAME, false);
             copyStringParam(defaultArgs, args, Openable.PARAM_CIPHER_MODE_NAME, false);
             copyStringParam(defaultArgs, args, Openable.PARAM_HASHING_ALG, false);
+            // Hidden-volume protection is also one-shot and must preserve SecureBuffer ownership.
+            copyBooleanParam(defaultArgs, args, Openable.PARAM_PROTECT_HIDDEN_VOLUME, false);
+            copySecureBufferParam(defaultArgs, args, Openable.PARAM_HIDDEN_VOLUME_PASSWORD, false);
         }
         return args;
     }
@@ -109,6 +112,9 @@ public class LocationOpenerFragmentCommon extends LocationOpenerBaseFragment imp
         copyStringParam(passwordDialogResultBundle, args, Openable.PARAM_CIPHER_NAME, true);
         copyStringParam(passwordDialogResultBundle, args, Openable.PARAM_CIPHER_MODE_NAME, true);
         copyStringParam(passwordDialogResultBundle, args, Openable.PARAM_HASHING_ALG, true);
+        // Dialog options override defaults, including protection state and hidden password.
+        copyBooleanParam(passwordDialogResultBundle, args, Openable.PARAM_PROTECT_HIDDEN_VOLUME, true);
+        copySecureBufferParam(passwordDialogResultBundle, args, Openable.PARAM_HIDDEN_VOLUME_PASSWORD, true);
     }
 
     /**
@@ -121,6 +127,30 @@ public class LocationOpenerFragmentCommon extends LocationOpenerBaseFragment imp
             String val = src.getString(key);
             if (val != null)
                 dst.putString(key, val);
+            else if (overwrite)
+                dst.remove(key);
+        }
+    }
+
+    /**
+     * Copies a one-shot boolean option while respecting the caller's overwrite policy.
+     */
+    private void copyBooleanParam(Bundle src, Bundle dst, String key, boolean overwrite)
+    {
+        if (src.containsKey(key) && (overwrite || !dst.containsKey(key)))
+            dst.putBoolean(key, src.getBoolean(key));
+    }
+
+    /**
+     * Copies a SecureBuffer by reference so password bytes are not converted to immutable strings.
+     */
+    private void copySecureBufferParam(Bundle src, Bundle dst, String key, boolean overwrite)
+    {
+        if (src.containsKey(key) && (overwrite || !dst.containsKey(key)))
+        {
+            SecureBuffer val = src.getParcelable(key);
+            if (val != null)
+                dst.putParcelable(key, val);
             else if (overwrite)
                 dst.remove(key);
         }
@@ -179,6 +209,8 @@ public class LocationOpenerFragmentCommon extends LocationOpenerBaseFragment imp
                 ContainerLocation containerLocation = (ContainerLocation) location;
                 containerLocation.setOpeningEncryptionEngineHint(param.getString(Openable.PARAM_CIPHER_NAME), param.getString(Openable.PARAM_CIPHER_MODE_NAME));
                 containerLocation.setOpeningHashFuncHint(param.getString(Openable.PARAM_HASHING_ALG));
+                // Pass protection options immediately before open(); the container location owns cleanup.
+                containerLocation.setHiddenVolumeProtection(param.getBoolean(Openable.PARAM_PROTECT_HIDDEN_VOLUME, false), param.getParcelable(Openable.PARAM_HIDDEN_VOLUME_PASSWORD));
             }
             location.open();
         }

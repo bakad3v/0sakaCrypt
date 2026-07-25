@@ -36,6 +36,8 @@
     <string name="hidden_volume_hash_algorithm">Hidden volume password hash algorithm</string>
     <string name="hidden_volume_file_system_type">Hidden volume file system type</string>
     <string name="hidden_volume_kdf_iterations_multiplier">Hidden volume KDF iterations multiplier (PIM)</string>
+    <string name="protect_hidden_volume">Protect hidden volume from damage</string>
+    <string name="protect_hidden_volume_desc">Use the hidden volume password to reserve its data area while opening the outer volume. The password is not saved.</string>
     <string name="create_new_container">Create new container</string>
     <string name="cancel_task_confirmation">Are you sure you want to cancel the current task?</string>
     <string name="yes">Yes</string>
@@ -65,6 +67,7 @@
     <string name="err_hidden_volume_is_not_supported">The selected container format does not support hidden volumes</string>
     <string name="err_hidden_volume_size_is_too_large">Hidden volume size is too large. Maximum size is %1$d MiB.</string>
     <string name="err_hidden_volume_file_system_is_too_small">Hidden volume size is too small for the selected file system</string>
+    <string name="err_hidden_volume_protection_failed">Failed to enable hidden volume protection. Check the hidden volume password.</string>
     <string name="err_failed_processing_settings_file">Failed processing the settings file</string>
     <string name="err_failed_creating_container">Failed creating container</string>
     <string name="about_message" translatable="false"><xliff:g id="copyright">\u00A9</xliff:g> 2012–2020</string>

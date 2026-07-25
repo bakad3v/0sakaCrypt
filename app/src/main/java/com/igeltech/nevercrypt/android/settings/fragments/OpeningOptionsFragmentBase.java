@@ -2,14 +2,18 @@ package com.igeltech.nevercrypt.android.settings.fragments;
 
 import android.os.Bundle;
 
+import com.igeltech.nevercrypt.android.dialogs.PasswordDialog;
 import com.igeltech.nevercrypt.android.fragments.PropertiesFragmentBase;
+import com.igeltech.nevercrypt.android.settings.PropertyEditor;
 import com.igeltech.nevercrypt.android.settings.PropertiesHostWithLocation;
 import com.igeltech.nevercrypt.android.settings.PropertiesHostWithStateBundle;
 import com.igeltech.nevercrypt.android.settings.UserSettings;
+import com.igeltech.nevercrypt.android.settings.container.HiddenVolumePasswordPropertyEditor;
 import com.igeltech.nevercrypt.android.settings.container.OpeningEncryptionAlgorithmPropertyEditor;
 import com.igeltech.nevercrypt.android.settings.container.OpeningHashingAlgorithmPropertyEditor;
 import com.igeltech.nevercrypt.android.settings.container.OpenInReadOnlyModePropertyEditor;
 import com.igeltech.nevercrypt.android.settings.container.PIMPropertyEditor;
+import com.igeltech.nevercrypt.android.settings.container.ProtectHiddenVolumePropertyEditor;
 import com.igeltech.nevercrypt.android.settings.container.UseExternalFileManagerPropertyEditor;
 import com.igeltech.nevercrypt.container.Container;
 import com.igeltech.nevercrypt.container.ContainerFormatInfo;
@@ -23,11 +27,13 @@ import com.igeltech.nevercrypt.settings.Settings;
 import java.util.Collections;
 import java.util.List;
 
-public abstract class OpeningOptionsFragmentBase extends PropertiesFragmentBase implements PropertiesHostWithStateBundle, PropertiesHostWithLocation
+public abstract class OpeningOptionsFragmentBase extends PropertiesFragmentBase implements PropertiesHostWithStateBundle, PropertiesHostWithLocation, PasswordDialog.PasswordReceiver
 {
     private final Bundle _state = new Bundle();
     protected Openable _location;
     protected Settings _settings;
+    // Stored so the hidden password editor can be enabled only when protection is checked.
+    private int _hiddenVolumePasswordPropertyId;
 
     public void saveExternalSettings()
     {
@@ -89,6 +95,42 @@ public abstract class OpeningOptionsFragmentBase extends PropertiesFragmentBase 
         // These options are stored in the activity state and apply only to the current opening attempt.
         _propertiesView.addProperty(new OpeningEncryptionAlgorithmPropertyEditor(this));
         _propertiesView.addProperty(new OpeningHashingAlgorithmPropertyEditor(this));
+        if (hasHiddenVolumeProtectionSupport())
+        {
+            // Show protection only for formats whose layout can contain a hidden volume.
+            _propertiesView.addProperty(new ProtectHiddenVolumePropertyEditor(this));
+            _hiddenVolumePasswordPropertyId = _propertiesView.addProperty(new HiddenVolumePasswordPropertyEditor(this));
+            updateHiddenVolumeProtectionProperties();
+        }
+    }
+
+    /**
+     * Keeps the hidden password field disabled until the user opts into hidden-volume protection.
+     */
+    public void updateHiddenVolumeProtectionProperties()
+    {
+        if (_hiddenVolumePasswordPropertyId != 0)
+            _propertiesView.setPropertyState(_hiddenVolumePasswordPropertyId, _state.getBoolean(Openable.PARAM_PROTECT_HIDDEN_VOLUME, false));
+    }
+
+    @Override
+    public void onPasswordEntered(PasswordDialog dlg)
+    {
+        // The fragment receives dialog callbacks, but the property editor owns the password state.
+        int propertyId = dlg.getArguments().getInt(PropertyEditor.ARG_PROPERTY_ID);
+        PasswordDialog.PasswordReceiver receiver = (PasswordDialog.PasswordReceiver) getPropertiesView().getPropertyById(propertyId);
+        if (receiver != null)
+            receiver.onPasswordEntered(dlg);
+    }
+
+    @Override
+    public void onPasswordNotEntered(PasswordDialog dlg)
+    {
+        // Mirror successful callback routing so cancellation reaches the editor that opened the dialog.
+        int propertyId = dlg.getArguments().getInt(PropertyEditor.ARG_PROPERTY_ID);
+        PasswordDialog.PasswordReceiver receiver = (PasswordDialog.PasswordReceiver) getPropertiesView().getPropertyById(propertyId);
+        if (receiver != null)
+            receiver.onPasswordNotEntered(dlg);
     }
 
     /**
@@ -112,5 +154,17 @@ public abstract class OpeningOptionsFragmentBase extends PropertiesFragmentBase 
         if (supportedFormats.size() == 1)
             return supportedFormats.get(0);
         return Container.findFormatByName(supportedFormats, location.getExternalSettings().getContainerFormatName());
+    }
+
+    /**
+     * Checks whether any format available for this opener can contain a hidden volume.
+     */
+    private boolean hasHiddenVolumeProtectionSupport()
+    {
+        // The option is format-dependent and should not appear for layouts without hidden containers.
+        for (ContainerFormatInfo cfi : getOpeningContainerFormats())
+            if (cfi.hasHiddenContainerSupport())
+                return true;
+        return false;
     }
 }

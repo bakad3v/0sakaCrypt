@@ -12,6 +12,7 @@ import com.igeltech.nevercrypt.fs.File.AccessMode;
 import com.igeltech.nevercrypt.fs.FileSystem;
 import com.igeltech.nevercrypt.fs.Path;
 import com.igeltech.nevercrypt.fs.RandomAccessIO;
+import com.igeltech.nevercrypt.fs.VolumeSizeLimiter;
 import com.igeltech.nevercrypt.fs.errors.DirectoryIsNotEmptyException;
 import com.igeltech.nevercrypt.fs.errors.FileInUseException;
 import com.igeltech.nevercrypt.fs.errors.FileSystemClosedException;
@@ -37,7 +38,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 //import android.util.Log;
 
-public class FatFS implements FileSystem
+public class FatFS implements FileSystem, VolumeSizeLimiter
 {
     public static final int SECTOR_SIZE = 512;
     public static final String TAG = "FatFS";
@@ -58,6 +59,8 @@ public class FatFS implements FileSystem
     protected int _totalClusterNumber;
     protected int[] _clusterTable;
     protected byte[] _emptyCluster;
+    // Positive value caps allocatable FAT clusters to protect the hidden-volume area.
+    protected long _volumeSizeLimit = -1;
     private Path _rootPath;
 
     protected FatFS(RandomAccessIO input)
@@ -333,6 +336,50 @@ public class FatFS implements FileSystem
     public void setReadOnlyMode(boolean val)
     {
         _readOnlyMode = val;
+    }
+
+    /**
+     * Applies the protected writable size used when an outer volume is opened with hidden protection.
+     */
+    @Override
+    public void setVolumeSizeLimit(long volumeSizeLimit) throws IOException
+    {
+        if (volumeSizeLimit <= 0)
+            throw new IllegalArgumentException("volumeSizeLimit <= 0");
+        synchronized (_ioSyncer)
+        {
+            // Shrink the in-memory cluster count without changing FAT metadata on disk.
+            _volumeSizeLimit = volumeSizeLimit;
+            _totalClusterNumber = Math.min(_totalClusterNumber, calcLimitedTotalClusterNumber(volumeSizeLimit));
+        }
+    }
+
+    /**
+     * Counts only clusters that fit completely before the hidden-volume boundary.
+     */
+    protected int calcLimitedTotalClusterNumber(long volumeSizeLimit)
+    {
+        int clusterSize = _bpb.sectorsPerCluster * _bpb.bytesPerSector;
+        int totalClusters = 2;
+        for (int i = 2; i < _clusterTable.length; i++)
+        {
+            if (_bpb.getClusterOffset(i) + clusterSize > volumeSizeLimit)
+                break;
+            totalClusters = i + 1;
+        }
+        return totalClusters;
+    }
+
+    /**
+     * Refuses writes to clusters that would overlap the protected hidden-volume area.
+     */
+    protected void checkClusterInsideVolumeLimit(int clusterIndex) throws IOException
+    {
+        if (_volumeSizeLimit <= 0)
+            return;
+        long clusterEnd = _bpb.getClusterOffset(clusterIndex) + (long) _bpb.sectorsPerCluster * _bpb.bytesPerSector;
+        if (clusterEnd > _volumeSizeLimit)
+            throw new NoFreeSpaceLeftException();
     }
 
     public int[] getClusterTable()
@@ -889,6 +936,8 @@ public class FatFS implements FileSystem
 
     protected void zeroCluster(int clusterIndex) throws IOException
     {
+        // Zeroing a newly allocated cluster is a write and must respect the same boundary.
+        checkClusterInsideVolumeLimit(clusterIndex);
         _input.seek(_bpb.getClusterOffset(clusterIndex));
         _input.write(_emptyCluster, 0, _emptyCluster.length);
     }
@@ -1263,7 +1312,9 @@ public class FatFS implements FileSystem
         @Override
         public long getTotalSpace() throws IOException
         {
-            return _bpb.getTotalSectorsNumber() * _bpb.bytesPerSector;
+            long totalSpace = _bpb.getTotalSectorsNumber() * _bpb.bytesPerSector;
+            // Normal FS clients see the protected capacity; DocumentProvider overrides this separately.
+            return _volumeSizeLimit > 0 ? Math.min(totalSpace, _volumeSizeLimit) : totalSpace;
         }
 
         @Override
@@ -1777,6 +1828,8 @@ public class FatFS implements FileSystem
                         addMissingClusters(clusterIndex - numClusters);
                         cluster = addCluster();
                     }
+                    // Guard the actual write path as well as allocation accounting.
+                    checkClusterInsideVolumeLimit(cluster);
                     _input.seek(_bpb.getClusterOffset(cluster));
                     _input.write(_buffer, 0, _bufferSize);
                 }

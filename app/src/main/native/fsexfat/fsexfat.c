@@ -170,6 +170,12 @@ static bool verify_vbr_checksum(struct exfat_dev* dev, void* sector,
 
 static int commit_super_block(const struct exfat* ef)
 {
+    /* The superblock is normally before the protected data area; guard it for malformed layouts. */
+    if (!exfat_range_inside_volume_limit(ef, 0, sizeof(struct exfat_super_block)))
+    {
+        exfat_error("no free space left while writing protected super block");
+        return 1;
+    }
     if (exfat_pwrite(ef->dev, ef->sb, sizeof(struct exfat_super_block), 0) < 0)
     {
         exfat_error("failed to write super block");
@@ -583,7 +589,8 @@ static uint32_t find_last_used_cluster(const struct exfat* ef)
 {
     uint32_t i;
 
-    for (i = ef->cmap.size; i > 0; i--)
+    /* Hidden-volume protection hides capped-off clusters from free-space wiping. */
+    for (i = exfat_effective_cluster_count(ef); i > 0; i--)
         if (BMAP_GET(ef->cmap.chunk, i - 1))
             return i - 1;
     return UINT32_MAX;
@@ -603,8 +610,38 @@ Java_com_igeltech_nevercrypt_fs_exfat_ExFat_getFreeSpaceStartOffset(JNIEnv *env,
     if(CLUSTER_INVALID(*ef->sb, c))
         return -1;
     off64_t start = exfat_c2o(ef, c) + CLUSTER_SIZE(*ef->sb);
-    off64_t volume_size = (off64_t) le64_to_cpu(ef->sb->sector_count) << ef->sb->sector_bits;
+    /* Free-space wiping and reporting must stop at the protected outer boundary when enabled. */
+    off64_t volume_size = ef->volume_size_limit != 0 ?
+                           ef->volume_size_limit :
+                           (off64_t) le64_to_cpu(ef->sb->sector_count) << ef->sb->sector_bits;
     return start > volume_size ? volume_size : start;
+}
+
+JNIEXPORT jint JNICALL
+Java_com_igeltech_nevercrypt_fs_exfat_ExFat_setVolumeSizeLimit(JNIEnv *env, jobject instance, jlong handle, jlong volumeSizeLimit)
+{
+    struct exfat *ef = (struct exfat *) handle;
+    if(ef == NULL)
+        ef = get_exfat(env, instance);
+    if(ef == NULL)
+        return -1;
+    if(volumeSizeLimit <= 0)
+        return -EINVAL;
+
+    /* Store an in-memory cap only; the on-disk exFAT superblock remains unchanged. */
+    off64_t first_data_offset = exfat_c2o(ef, EXFAT_FIRST_DATA_CLUSTER);
+    uint32_t full_cluster_count = le32_to_cpu(ef->sb->cluster_count);
+    uint32_t cluster_count_limit = 0;
+
+    if(volumeSizeLimit > first_data_offset)
+    {
+        uint64_t limit = ((uint64_t) volumeSizeLimit - (uint64_t) first_data_offset) / CLUSTER_SIZE(*ef->sb);
+        cluster_count_limit = limit > full_cluster_count ? full_cluster_count : (uint32_t) limit;
+    }
+
+    ef->cluster_count_limit = cluster_count_limit;
+    ef->volume_size_limit = volumeSizeLimit;
+    return 0;
 }
 
 JNIEXPORT jint JNICALL
@@ -629,7 +666,8 @@ Java_com_igeltech_nevercrypt_fs_exfat_ExFat_randFreeSpace(JNIEnv *env, jobject i
         return err;
     }
 
-    for (uint32_t  i = 0; i < ef->cmap.size; i++)
+    /* Wipe only clusters visible inside the protected outer area. */
+    for (uint32_t  i = 0; i < exfat_effective_cluster_count(ef); i++)
         if (BMAP_GET(ef->cmap.chunk, i) == 0)
         {
             /* Generate fresh random data for every free cluster before
@@ -643,8 +681,15 @@ Java_com_igeltech_nevercrypt_fs_exfat_ExFat_randFreeSpace(JNIEnv *env, jobject i
             }
 
             uint32_t cluster = i + EXFAT_FIRST_DATA_CLUSTER;
-            if (exfat_pwrite(ef->dev, buf, cluster_size,
-                             exfat_c2o(ef, cluster)) < 0)
+            off64_t cluster_offset = exfat_c2o(ef, cluster);
+            if (!exfat_range_inside_volume_limit(ef, cluster_offset, cluster_size))
+            {
+                exfat_error("no free space left while wiping protected free cluster");
+                close(random_fd);
+                free(buf);
+                return -ENOSPC;
+            }
+            if (exfat_pwrite(ef->dev, buf, cluster_size, cluster_offset) < 0)
             {
                 exfat_error("failed to write cluster %#x", cluster);
                 close(random_fd);
@@ -665,6 +710,9 @@ JNIEXPORT jlong JNICALL Java_com_igeltech_nevercrypt_fs_exfat_ExFat_getTotalSpac
     if(ef == NULL)
         return -1;
     exfat_debug("[%s]", __func__);
+    /* Mounted clients see the capped size; DocumentProvider may substitute full outer stats. */
+    if (ef->volume_size_limit != 0)
+        return (jlong) exfat_effective_cluster_count(ef) * CLUSTER_SIZE(*ef->sb);
     return ((jlong)le64_to_cpu(ef->sb->sector_count) >> ef->sb->spc_bits)*CLUSTER_SIZE(*ef->sb);
 }
 

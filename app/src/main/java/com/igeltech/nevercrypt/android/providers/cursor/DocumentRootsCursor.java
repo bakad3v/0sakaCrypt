@@ -9,6 +9,7 @@ import android.text.format.Formatter;
 import com.drew.lang.annotations.NotNull;
 import com.igeltech.nevercrypt.android.Logger;
 import com.igeltech.nevercrypt.android.R;
+import com.igeltech.nevercrypt.locations.ContainerLocation;
 import com.igeltech.nevercrypt.locations.CryptoLocation;
 import com.igeltech.nevercrypt.locations.Location;
 import com.igeltech.nevercrypt.locations.LocationsManager;
@@ -156,6 +157,13 @@ public class DocumentRootsCursor extends AbstractCursor
             catch (IOException e)
             {
                 Logger.log(e);
+            }
+            if (loc instanceof ContainerLocation)
+            {
+                // Hidden-volume protection limits writes internally, but provider stats must stay full-size.
+                ContainerLocation containerLocation = (ContainerLocation) loc;
+                res.freeSpace = containerLocation.getDocumentProviderFreeSpace(res.freeSpace);
+                res.totalSpace = containerLocation.getDocumentProviderTotalSpace(res.totalSpace);
             }
             res.title = loc.getTitle();
             Location tmp = loc.copy();
