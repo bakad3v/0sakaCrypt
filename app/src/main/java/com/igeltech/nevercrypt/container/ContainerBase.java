@@ -335,7 +335,10 @@ public abstract class ContainerBase implements Closeable
             if (tryLayoutByHash(cf, containerFile, password, isHidden, _messageDigest))
                 return true;
         }
-        VolumeLayout vl = cf.getVolumeLayout();
+        // Hidden-header probes should auto-detect against the hidden layout, not the outer one.
+        VolumeLayout vl = isHidden ? cf.getHiddenVolumeLayout() : cf.getVolumeLayout();
+        if (vl == null)
+            return false;
         for (MessageDigest hashFunc : vl.getSupportedHashFuncs())
             if (!isSameHashFunc(hashFunc, _messageDigest) && tryLayoutByHash(cf, containerFile, password, isHidden, hashFunc))
                 return true;

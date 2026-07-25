@@ -241,7 +241,13 @@ public class ContainerBasedLocation extends CryptoLocationBase implements Contai
      * Stores hidden-volume protection options for the next open attempt only.
      */
     @Override
-    public void setHiddenVolumeProtection(boolean protect, SecureBuffer hiddenPassword)
+    public void setHiddenVolumeProtection(
+            boolean protect,
+            SecureBuffer hiddenPassword,
+            int hiddenNumKDFIterations,
+            String hiddenCipherName,
+            String hiddenCipherModeName,
+            String hiddenHashFuncName)
     {
         SharedData data = getSharedData();
         // This is one-shot state: replace stale password data and reset all derived limits.
@@ -249,6 +255,15 @@ public class ContainerBasedLocation extends CryptoLocationBase implements Contai
             clearHiddenVolumeProtectionPassword();
         data.protectHiddenVolume = protect;
         data.hiddenVolumePassword = protect ? hiddenPassword : null;
+        data.hiddenVolumeNumKDFIterations = protect ? Math.max(hiddenNumKDFIterations, 0) : 0;
+        data.hiddenVolumeCipherName = protect ? normalizeOneShotHint(hiddenCipherName) : null;
+        data.hiddenVolumeCipherModeName = protect ? normalizeOneShotHint(hiddenCipherModeName) : null;
+        if (data.hiddenVolumeCipherName == null || data.hiddenVolumeCipherModeName == null)
+        {
+            data.hiddenVolumeCipherName = null;
+            data.hiddenVolumeCipherModeName = null;
+        }
+        data.hiddenVolumeHashFuncName = protect ? normalizeOneShotHint(hiddenHashFuncName) : null;
         data.protectedOuterVolumeSize = -1;
         data.hiddenVolumeSize = -1;
         data.fullOuterVolumeSize = -1;
@@ -327,11 +342,22 @@ public class ContainerBasedLocation extends CryptoLocationBase implements Contai
      */
     protected MessageDigest findHashFuncByName(ContainerFormatInfo selectedFormat, String hashFuncName)
     {
+        return findHashFuncByName(selectedFormat, hashFuncName, false);
+    }
+
+    /**
+     * Resolves a saved or one-shot KDF/hash hint against candidate outer or hidden layouts.
+     */
+    protected MessageDigest findHashFuncByName(ContainerFormatInfo selectedFormat, String hashFuncName, boolean hiddenVolume)
+    {
         if (hashFuncName == null || hashFuncName.isEmpty())
             return null;
         for (ContainerFormatInfo cfi : getCandidateFormats(selectedFormat))
         {
-            MessageDigest hashFunc = VolumeLayoutBase.findHashFunc(cfi.getVolumeLayout().getSupportedHashFuncs(), hashFuncName);
+            VolumeLayout layout = hiddenVolume ? cfi.getHiddenVolumeLayout() : cfi.getVolumeLayout();
+            if (layout == null)
+                continue;
+            MessageDigest hashFunc = VolumeLayoutBase.findHashFunc(layout.getSupportedHashFuncs(), hashFuncName);
             if (hashFunc != null)
                 return hashFunc;
         }
@@ -428,6 +454,7 @@ public class ContainerBasedLocation extends CryptoLocationBase implements Contai
     {
         Container hiddenContainer = new Container(getLocation().getCurrentPath());
         hiddenContainer.setContainerFormat(outerContainer.getContainerFormat());
+        applyHiddenVolumeOpeningHints(hiddenContainer, outerContainer.getContainerFormat());
         try
         {
             hiddenContainer.open(hiddenPasswordBytes, true);
@@ -458,6 +485,29 @@ public class ContainerBasedLocation extends CryptoLocationBase implements Contai
                 Logger.log(e);
             }
         }
+    }
+
+    /**
+     * Applies hidden-header-only hints without affecting the already opened outer container.
+     */
+    private void applyHiddenVolumeOpeningHints(Container hiddenContainer, ContainerFormatInfo selectedFormat)
+    {
+        SharedData data = getSharedData();
+        if (data.hiddenVolumeCipherName != null && data.hiddenVolumeCipherModeName != null)
+            hiddenContainer.setEncryptionEngineHint(data.hiddenVolumeCipherName, data.hiddenVolumeCipherModeName);
+        MessageDigest hashFuncHint = findHashFuncByName(selectedFormat, data.hiddenVolumeHashFuncName, true);
+        if (hashFuncHint != null)
+            hiddenContainer.setHashFuncHint(hashFuncHint);
+        if (data.hiddenVolumeNumKDFIterations > 0)
+            hiddenContainer.setNumKDFIterations(data.hiddenVolumeNumKDFIterations);
+    }
+
+    /**
+     * Normalizes explicit auto-detect values from the opening options screen.
+     */
+    private String normalizeOneShotHint(String value)
+    {
+        return value == null || value.isEmpty() ? null : value;
     }
 
     /**
@@ -537,6 +587,10 @@ public class ContainerBasedLocation extends CryptoLocationBase implements Contai
         clearHiddenVolumeProtectionPassword();
         SharedData data = getSharedData();
         data.protectHiddenVolume = false;
+        data.hiddenVolumeNumKDFIterations = 0;
+        data.hiddenVolumeCipherName = null;
+        data.hiddenVolumeCipherModeName = null;
+        data.hiddenVolumeHashFuncName = null;
         data.protectedOuterVolumeSize = -1;
         data.hiddenVolumeSize = -1;
         data.fullOuterVolumeSize = -1;
@@ -629,6 +683,8 @@ public class ContainerBasedLocation extends CryptoLocationBase implements Contai
         // One-shot hidden-volume protection state. Negative sizes mean unknown or inactive.
         public boolean protectHiddenVolume, hiddenVolumeLimitApplied;
         public SecureBuffer hiddenVolumePassword;
+        public int hiddenVolumeNumKDFIterations;
+        public String hiddenVolumeCipherName, hiddenVolumeCipherModeName, hiddenVolumeHashFuncName;
         public long protectedOuterVolumeSize = -1;
         public long hiddenVolumeSize = -1;
         public long fullOuterVolumeSize = -1;

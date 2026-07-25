@@ -3,6 +3,7 @@ package com.igeltech.nevercrypt.android.settings.container;
 import com.igeltech.nevercrypt.android.R;
 import com.igeltech.nevercrypt.android.settings.fragments.OpeningOptionsFragmentBase;
 import com.igeltech.nevercrypt.container.ContainerFormatInfo;
+import com.igeltech.nevercrypt.container.VolumeLayout;
 import com.igeltech.nevercrypt.locations.Openable;
 
 import java.security.MessageDigest;
@@ -16,9 +17,22 @@ import java.util.Locale;
  */
 public class OpeningHashingAlgorithmPropertyEditor extends HashingAlgorithmPropertyEditorBase
 {
+    private final String _hashAlgKey;
+    private final boolean _hiddenVolume;
+
     public OpeningHashingAlgorithmPropertyEditor(OpeningOptionsFragmentBase hostFragment)
     {
-        super(hostFragment, R.string.hash_algorithm, R.string.hash_alg_desc, true);
+        this(hostFragment, R.string.hash_algorithm, Openable.PARAM_HASHING_ALG, false);
+    }
+
+    /**
+     * Creates a one-shot opening hash hint editor for either the outer or hidden header.
+     */
+    public OpeningHashingAlgorithmPropertyEditor(OpeningOptionsFragmentBase hostFragment, int titleResId, String hashAlgKey, boolean hiddenVolume)
+    {
+        super(hostFragment, titleResId, R.string.hash_alg_desc, true);
+        _hashAlgKey = hashAlgKey;
+        _hiddenVolume = hiddenVolume;
     }
 
     protected OpeningOptionsFragmentBase getHostFragment()
@@ -33,9 +47,13 @@ public class OpeningHashingAlgorithmPropertyEditor extends HashingAlgorithmPrope
     protected List<MessageDigest> getCurrentHashAlgList()
     {
         LinkedHashMap<String, MessageDigest> hashFuncs = new LinkedHashMap<>();
-        for (ContainerFormatInfo cfi : getHostFragment().getOpeningContainerFormats())
+        List<ContainerFormatInfo> formats = _hiddenVolume ? getHostFragment().getOpeningHiddenContainerFormats() : getHostFragment().getOpeningContainerFormats();
+        for (ContainerFormatInfo cfi : formats)
         {
-            for (MessageDigest hashFunc : cfi.getVolumeLayout().getSupportedHashFuncs())
+            VolumeLayout layout = _hiddenVolume ? cfi.getHiddenVolumeLayout() : cfi.getVolumeLayout();
+            if (layout == null)
+                continue;
+            for (MessageDigest hashFunc : layout.getSupportedHashFuncs())
             {
                 String key = hashFunc.getAlgorithm().toLowerCase(Locale.US);
                 if (!hashFuncs.containsKey(key))
@@ -48,25 +66,25 @@ public class OpeningHashingAlgorithmPropertyEditor extends HashingAlgorithmPrope
     @Override
     protected boolean hasSavedHashFuncSelection()
     {
-        return getHostFragment().getState().containsKey(Openable.PARAM_HASHING_ALG);
+        return getHostFragment().getState().containsKey(_hashAlgKey);
     }
 
     @Override
     protected int findSavedHashFuncIndex(List<MessageDigest> algs)
     {
-        return findHashFuncIndexByName(algs, getHostFragment().getState().getString(Openable.PARAM_HASHING_ALG));
+        return findHashFuncIndexByName(algs, getHostFragment().getState().getString(_hashAlgKey));
     }
 
     @Override
     protected void saveHashFuncValue(MessageDigest hashFunc)
     {
-        getHostFragment().getState().putString(Openable.PARAM_HASHING_ALG, hashFunc.getAlgorithm());
+        getHostFragment().getState().putString(_hashAlgKey, hashFunc.getAlgorithm());
     }
 
     @Override
     protected void saveAutoDetectValue()
     {
         // Store an explicit empty value so the password dialog can clear previous defaults.
-        getHostFragment().getState().putString(Openable.PARAM_HASHING_ALG, "");
+        getHostFragment().getState().putString(_hashAlgKey, "");
     }
 }

@@ -2,6 +2,7 @@ package com.igeltech.nevercrypt.android.settings.fragments;
 
 import android.os.Bundle;
 
+import com.igeltech.nevercrypt.android.R;
 import com.igeltech.nevercrypt.android.dialogs.PasswordDialog;
 import com.igeltech.nevercrypt.android.fragments.PropertiesFragmentBase;
 import com.igeltech.nevercrypt.android.settings.PropertyEditor;
@@ -24,6 +25,7 @@ import com.igeltech.nevercrypt.locations.LocationsManager;
 import com.igeltech.nevercrypt.locations.Openable;
 import com.igeltech.nevercrypt.settings.Settings;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -33,7 +35,7 @@ public abstract class OpeningOptionsFragmentBase extends PropertiesFragmentBase 
     protected Openable _location;
     protected Settings _settings;
     // Stored so the hidden password editor can be enabled only when protection is checked.
-    private int _hiddenVolumePasswordPropertyId;
+    private int _hiddenVolumePasswordPropertyId, _hiddenVolumePIMPropertyId, _hiddenVolumeEncryptionPropertyId, _hiddenVolumeHashPropertyId;
 
     public void saveExternalSettings()
     {
@@ -100,17 +102,37 @@ public abstract class OpeningOptionsFragmentBase extends PropertiesFragmentBase 
             // Show protection only for formats whose layout can contain a hidden volume.
             _propertiesView.addProperty(new ProtectHiddenVolumePropertyEditor(this));
             _hiddenVolumePasswordPropertyId = _propertiesView.addProperty(new HiddenVolumePasswordPropertyEditor(this));
+            if (hasHiddenVolumeCustomKDFIterationsSupport())
+                _hiddenVolumePIMPropertyId = _propertiesView.addProperty(new PIMPropertyEditor(this, R.string.hidden_volume_kdf_iterations_multiplier, Openable.PARAM_HIDDEN_VOLUME_KDF_ITERATIONS));
+            _hiddenVolumeEncryptionPropertyId = _propertiesView.addProperty(new OpeningEncryptionAlgorithmPropertyEditor(
+                    this,
+                    R.string.hidden_volume_encryption_algorithm,
+                    Openable.PARAM_HIDDEN_VOLUME_CIPHER_NAME,
+                    Openable.PARAM_HIDDEN_VOLUME_CIPHER_MODE_NAME,
+                    true));
+            _hiddenVolumeHashPropertyId = _propertiesView.addProperty(new OpeningHashingAlgorithmPropertyEditor(
+                    this,
+                    R.string.hidden_volume_hash_algorithm,
+                    Openable.PARAM_HIDDEN_VOLUME_HASHING_ALG,
+                    true));
             updateHiddenVolumeProtectionProperties();
         }
     }
 
     /**
-     * Keeps the hidden password field disabled until the user opts into hidden-volume protection.
+     * Keeps hidden-volume probe fields disabled until the user opts into protection.
      */
     public void updateHiddenVolumeProtectionProperties()
     {
+        boolean enabled = _state.getBoolean(Openable.PARAM_PROTECT_HIDDEN_VOLUME, false);
         if (_hiddenVolumePasswordPropertyId != 0)
-            _propertiesView.setPropertyState(_hiddenVolumePasswordPropertyId, _state.getBoolean(Openable.PARAM_PROTECT_HIDDEN_VOLUME, false));
+            _propertiesView.setPropertyState(_hiddenVolumePasswordPropertyId, enabled);
+        if (_hiddenVolumePIMPropertyId != 0)
+            _propertiesView.setPropertyState(_hiddenVolumePIMPropertyId, enabled);
+        if (_hiddenVolumeEncryptionPropertyId != 0)
+            _propertiesView.setPropertyState(_hiddenVolumeEncryptionPropertyId, enabled);
+        if (_hiddenVolumeHashPropertyId != 0)
+            _propertiesView.setPropertyState(_hiddenVolumeHashPropertyId, enabled);
     }
 
     @Override
@@ -146,6 +168,21 @@ public abstract class OpeningOptionsFragmentBase extends PropertiesFragmentBase 
     }
 
     /**
+     * Returns only hidden-capable formats for hidden-header probe hints.
+     */
+    public List<ContainerFormatInfo> getOpeningHiddenContainerFormats()
+    {
+        List<ContainerFormatInfo> formats = getOpeningContainerFormats();
+        if (formats.isEmpty())
+            return formats;
+        ArrayList<ContainerFormatInfo> res = new ArrayList<>();
+        for (ContainerFormatInfo cfi : formats)
+            if (cfi.hasHiddenContainerSupport())
+                res.add(cfi);
+        return res;
+    }
+
+    /**
      * Uses the saved container format hint to narrow algorithm choices when possible.
      */
     private ContainerFormatInfo getCurrentContainerFormat(ContainerLocation location)
@@ -164,6 +201,17 @@ public abstract class OpeningOptionsFragmentBase extends PropertiesFragmentBase 
         // The option is format-dependent and should not appear for layouts without hidden containers.
         for (ContainerFormatInfo cfi : getOpeningContainerFormats())
             if (cfi.hasHiddenContainerSupport())
+                return true;
+        return false;
+    }
+
+    /**
+     * Shows hidden PIM only when at least one hidden-capable candidate format supports custom KDF iterations.
+     */
+    private boolean hasHiddenVolumeCustomKDFIterationsSupport()
+    {
+        for (ContainerFormatInfo cfi : getOpeningHiddenContainerFormats())
+            if (cfi.hasCustomKDFIterationsSupport())
                 return true;
         return false;
     }

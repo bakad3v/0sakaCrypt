@@ -39,6 +39,10 @@ public class ProtectHiddenVolumePropertyEditor extends CheckBoxPropertyEditor
             if (hiddenPassword != null)
                 hiddenPassword.close();
             getHost().getState().remove(Openable.PARAM_HIDDEN_VOLUME_PASSWORD);
+            getHost().getState().remove(Openable.PARAM_HIDDEN_VOLUME_KDF_ITERATIONS);
+            getHost().getState().remove(Openable.PARAM_HIDDEN_VOLUME_CIPHER_NAME);
+            getHost().getState().remove(Openable.PARAM_HIDDEN_VOLUME_CIPHER_MODE_NAME);
+            getHost().getState().remove(Openable.PARAM_HIDDEN_VOLUME_HASHING_ALG);
         }
     }
 

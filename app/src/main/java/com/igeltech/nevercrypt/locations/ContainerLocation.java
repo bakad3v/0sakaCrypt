@@ -30,7 +30,13 @@ public interface ContainerLocation extends CryptoLocation
      * Sets one-shot hidden volume protection for the next container opening attempt.
      * Implementations take ownership of hiddenPassword and must wipe it after probing the hidden header.
      */
-    void setHiddenVolumeProtection(boolean protect, SecureBuffer hiddenPassword);
+    void setHiddenVolumeProtection(
+            boolean protect,
+            SecureBuffer hiddenPassword,
+            int hiddenNumKDFIterations,
+            String hiddenCipherName,
+            String hiddenCipherModeName,
+            String hiddenHashFuncName);
 
     /**
      * Returns the free space value exposed through DocumentProvider.

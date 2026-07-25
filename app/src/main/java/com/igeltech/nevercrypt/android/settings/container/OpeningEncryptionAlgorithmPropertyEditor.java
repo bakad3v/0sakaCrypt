@@ -19,9 +19,24 @@ import java.util.Locale;
  */
 public class OpeningEncryptionAlgorithmPropertyEditor extends EncryptionAlgorithmPropertyEditorBase
 {
+    private final String _cipherNameKey;
+    private final String _cipherModeNameKey;
+    private final boolean _hiddenVolume;
+
     public OpeningEncryptionAlgorithmPropertyEditor(OpeningOptionsFragmentBase hostFragment)
     {
-        super(hostFragment, R.string.encryption_algorithm, R.string.encryption_alg_desc, true);
+        this(hostFragment, R.string.encryption_algorithm, Openable.PARAM_CIPHER_NAME, Openable.PARAM_CIPHER_MODE_NAME, false);
+    }
+
+    /**
+     * Creates a one-shot opening encryption hint editor for either the outer or hidden header.
+     */
+    public OpeningEncryptionAlgorithmPropertyEditor(OpeningOptionsFragmentBase hostFragment, int titleResId, String cipherNameKey, String cipherModeNameKey, boolean hiddenVolume)
+    {
+        super(hostFragment, titleResId, R.string.encryption_alg_desc, true);
+        _cipherNameKey = cipherNameKey;
+        _cipherModeNameKey = cipherModeNameKey;
+        _hiddenVolume = hiddenVolume;
     }
 
     protected OpeningOptionsFragmentBase getHostFragment()
@@ -36,9 +51,12 @@ public class OpeningEncryptionAlgorithmPropertyEditor extends EncryptionAlgorith
     protected List<? extends EncryptionEngine> getCurrentEncAlgList()
     {
         LinkedHashMap<String, FileEncryptionEngine> engines = new LinkedHashMap<>();
-        for (ContainerFormatInfo cfi : getHostFragment().getOpeningContainerFormats())
+        List<ContainerFormatInfo> formats = _hiddenVolume ? getHostFragment().getOpeningHiddenContainerFormats() : getHostFragment().getOpeningContainerFormats();
+        for (ContainerFormatInfo cfi : formats)
         {
-            VolumeLayout layout = cfi.getVolumeLayout();
+            VolumeLayout layout = _hiddenVolume ? cfi.getHiddenVolumeLayout() : cfi.getVolumeLayout();
+            if (layout == null)
+                continue;
             for (FileEncryptionEngine engine : layout.getSupportedEncryptionEngines())
             {
                 String key = VolumeLayoutBase.getEncEngineName(engine).toLowerCase(Locale.US);
@@ -52,27 +70,27 @@ public class OpeningEncryptionAlgorithmPropertyEditor extends EncryptionAlgorith
     @Override
     protected boolean hasSavedAlgorithmSelection()
     {
-        return getHostFragment().getState().containsKey(Openable.PARAM_CIPHER_NAME) || getHostFragment().getState().containsKey(Openable.PARAM_CIPHER_MODE_NAME);
+        return getHostFragment().getState().containsKey(_cipherNameKey) || getHostFragment().getState().containsKey(_cipherModeNameKey);
     }
 
     @Override
     protected int findSavedAlgorithmIndex(List<? extends EncryptionEngine> algs)
     {
-        return findEngineIndexByCipherAndMode(algs, getHostFragment().getState().getString(Openable.PARAM_CIPHER_NAME), getHostFragment().getState().getString(Openable.PARAM_CIPHER_MODE_NAME));
+        return findEngineIndexByCipherAndMode(algs, getHostFragment().getState().getString(_cipherNameKey), getHostFragment().getState().getString(_cipherModeNameKey));
     }
 
     @Override
     protected void saveAlgorithmValue(EncryptionEngine engine)
     {
-        getHostFragment().getState().putString(Openable.PARAM_CIPHER_NAME, engine.getCipherName());
-        getHostFragment().getState().putString(Openable.PARAM_CIPHER_MODE_NAME, engine.getCipherModeName());
+        getHostFragment().getState().putString(_cipherNameKey, engine.getCipherName());
+        getHostFragment().getState().putString(_cipherModeNameKey, engine.getCipherModeName());
     }
 
     @Override
     protected void saveAutoDetectValue()
     {
         // Store explicit empty values so the password dialog can clear previous defaults.
-        getHostFragment().getState().putString(Openable.PARAM_CIPHER_NAME, "");
-        getHostFragment().getState().putString(Openable.PARAM_CIPHER_MODE_NAME, "");
+        getHostFragment().getState().putString(_cipherNameKey, "");
+        getHostFragment().getState().putString(_cipherModeNameKey, "");
     }
 }

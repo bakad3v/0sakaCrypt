@@ -17,6 +17,11 @@ public interface Openable extends Location
     String PARAM_PROTECT_HIDDEN_VOLUME = "com.igeltech.nevercrypt.android.PROTECT_HIDDEN_VOLUME";
     // One-shot hidden-volume password; it stays in SecureBuffer form until the opener consumes it.
     String PARAM_HIDDEN_VOLUME_PASSWORD = "com.igeltech.nevercrypt.android.HIDDEN_VOLUME_PASSWORD";
+    // One-shot hidden-volume opening hints used only while probing the hidden header for protection.
+    String PARAM_HIDDEN_VOLUME_KDF_ITERATIONS = "com.igeltech.nevercrypt.android.HIDDEN_VOLUME_KDF_ITERATIONS";
+    String PARAM_HIDDEN_VOLUME_CIPHER_NAME = "com.igeltech.nevercrypt.android.HIDDEN_VOLUME_CIPHER_NAME";
+    String PARAM_HIDDEN_VOLUME_CIPHER_MODE_NAME = "com.igeltech.nevercrypt.android.HIDDEN_VOLUME_CIPHER_MODE_NAME";
+    String PARAM_HIDDEN_VOLUME_HASHING_ALG = "com.igeltech.nevercrypt.android.HIDDEN_VOLUME_HASHING_ALG";
 
     void setPassword(SecureBuffer pass);
 
