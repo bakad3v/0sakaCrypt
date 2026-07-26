@@ -46,7 +46,9 @@
 
 ## Благодарности
 [sovworks](https://sovworks.com/eds/), разработчики EDS lite
+
 [IGEL Tech GmbH](https://www.igel-tech.com/), разработчики Nevercrypt
+
 Разработчики [VeraCrypt](https://veracrypt.io/)
 
 ## Поддержать разработчика

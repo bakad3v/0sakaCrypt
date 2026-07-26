@@ -50,7 +50,9 @@ When file is edited, application creates it's backup copy. **Make sure there's e
 
 ## Acknowledgements
 [sovworks](https://sovworks.com/eds/), the developers of the original EDS lite
+
 [IGEL Tech GmbH](https://www.igel-tech.com/), the developers of the Nevercrypt
+
 The developers of the [VeraCrypt](https://veracrypt.io/)
 
 ## Donations
