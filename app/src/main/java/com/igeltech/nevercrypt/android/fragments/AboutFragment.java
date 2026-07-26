@@ -4,6 +4,8 @@ import android.content.ClipData;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.content.res.AssetFileDescriptor;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -33,6 +35,10 @@ import java.util.Locale;
 
 public class AboutFragment extends Fragment
 {
+    private static final String SATA_ANDAGI_ASSET_NAME = "sata-andagi.mp3";
+
+    private MediaPlayer _sataAndagiPlayer;
+
     public static String getVersionName(Context context)
     {
         try
@@ -56,18 +62,8 @@ public class AboutFragment extends Fragment
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState)
     {
         String verName = getVersionName(getActivity());
-        String aboutMessage = String.format("%s v%s\n%s", getResources().getString(R.string.app_name), verName, getResources().getString(R.string.about_message));
+        String aboutMessage = String.format("%s v%s", getResources().getString(R.string.app_name), verName);
         ((MaterialTextView) view.findViewById(R.id.about_text_view)).setText(aboutMessage);
-        view.findViewById(R.id.homepage_button).setOnClickListener(view1 -> {
-            try
-            {
-                openWebPage(GlobalConfig.HOMEPAGE_URL);
-            }
-            catch (Throwable e)
-            {
-                Logger.showAndLog(getActivity(), e);
-            }
-        });
         view.findViewById(R.id.get_program_log).setOnClickListener(view1 -> {
             try
             {
@@ -78,9 +74,16 @@ public class AboutFragment extends Fragment
                 Logger.showAndLog(getActivity(), e);
             }
         });
-        view.findViewById(R.id.donation_button).setOnClickListener(view1 -> openWebPage(GlobalConfig.DONATIONS_URL));
         view.findViewById(R.id.check_source_code_button).setOnClickListener(view1 -> openWebPage(GlobalConfig.SOURCE_CODE_URL));
+        view.findViewById(R.id.launcher_icon).setOnClickListener(view1 -> playSataAndagi());
         super.onViewCreated(view, savedInstanceState);
+    }
+
+    @Override
+    public void onDestroyView()
+    {
+        releaseSataAndagiPlayer();
+        super.onDestroyView();
     }
 
     protected void openWebPage(String url)
@@ -92,6 +95,54 @@ public class AboutFragment extends Fragment
         catch (Exception e)
         {
             Logger.showAndLog(getActivity(), e);
+        }
+    }
+
+    private void playSataAndagi()
+    {
+        try
+        {
+            releaseSataAndagiPlayer();
+
+            Context context = getContext();
+            if (context == null)
+                return;
+
+            MediaPlayer player = new MediaPlayer();
+            _sataAndagiPlayer = player;
+
+            try (AssetFileDescriptor asset = context.getAssets().openFd(SATA_ANDAGI_ASSET_NAME))
+            {
+                player.setDataSource(asset.getFileDescriptor(), asset.getStartOffset(), asset.getLength());
+            }
+
+            player.setOnCompletionListener(mediaPlayer -> {
+                if (_sataAndagiPlayer == mediaPlayer)
+                    _sataAndagiPlayer = null;
+                mediaPlayer.release();
+            });
+            player.setOnErrorListener((mediaPlayer, what, extra) -> {
+                if (_sataAndagiPlayer == mediaPlayer)
+                    _sataAndagiPlayer = null;
+                mediaPlayer.release();
+                return true;
+            });
+            player.prepare();
+            player.start();
+        }
+        catch (Exception e)
+        {
+            releaseSataAndagiPlayer();
+            Logger.showAndLog(getActivity(), e);
+        }
+    }
+
+    private void releaseSataAndagiPlayer()
+    {
+        if (_sataAndagiPlayer != null)
+        {
+            _sataAndagiPlayer.release();
+            _sataAndagiPlayer = null;
         }
     }
 

@@ -16,7 +16,7 @@
     <string name="enter_new_file_name">Entrez un nouveau nom de fichier</string>
     <string name="settings">Réglages</string>
     <string name="bad_container_file_or_wrong_password">Mauvais fichier container ou mauvais mot de passe</string>
-    <string name="app_shortcut">Raccourci <xliff:g id="program_name">NeverCrypt</xliff:g></string>
+    <string name="app_shortcut">Raccourci <xliff:g id="program_name">0sakaCrypt</xliff:g></string>
     <string name="enter_widget_title">Entrez le titre du widget</string>
     <string name="select_path">Choix du chemin</string>
     <string name="container_size">Taille du container</string>
@@ -34,7 +34,7 @@
     <string name="free_space">Espace libre</string>
     <string name="saving_changes">Sauvegarde des changements</string>
     <string name="preparing_file">Préparation des fichiers</string>
-    <string name="app_service_is_running">Le service <xliff:g id="program_name">NeverCrypt</xliff:g> est en cours</string>
+    <string name="app_service_is_running">Le service <xliff:g id="program_name">0sakaCrypt</xliff:g> est en cours</string>
     <string name="stop_service_and_exit">Arrêter le service et quitter</string>
     <string name="send_files_to">Envoyer les fichiers à</string>
     <string name="send">Envoyer</string>
@@ -74,7 +74,7 @@
     <string name="show_previews">Afficher la prévisualisation dans le gestionnaire de fichier</string>
     <string name="open_read_only">Ouvrir en lecture seule</string>
     <string name="disable_wide_screen_layouts">Désactiver le layout écrans larges</string>
-    <string name="close_all_containers">Fermer tous les containers <xliff:g id="program_name">NeverCrypt</xliff:g></string>
+    <string name="close_all_containers">Fermer tous les containers <xliff:g id="program_name">0sakaCrypt</xliff:g></string>
     <string name="fill_free_space_with_random_data">Remplir l\'espace libre avec des données aléatoires.</string>
     <string name="ascending">Croissant</string>
     <string name="descending">Décroissant</string>
@@ -118,7 +118,7 @@
     <string name="save_password_desc">Sauvegarder le mot de passe du container. Sauvegarder un mot de passe peut ne pas être sécurisé.</string>
     <string name="enable_full_screen_mode">Activer le mode plein écran</string>
     <string name="never_save_history">Ne jamais sauvegarder les liens vers les containers</string>
-    <string name="never_save_history_desc">Les liens vers les nouveaux containers vont être retirés après avoir fermé <xliff:g id="program_name">NeverCrypt</xliff:g></string>
+    <string name="never_save_history_desc">Les liens vers les nouveaux containers vont être retirés après avoir fermé <xliff:g id="program_name">0sakaCrypt</xliff:g></string>
     <string name="use_external_file_manager">Gestionnaire de fichier externe</string>
     <string name="use_external_file_manager_desc">Ouvrir le gestionnaire de fichier externe quand un container est monté.</string>
 </resources>

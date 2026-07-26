@@ -18,7 +18,7 @@
     <string name="enter_new_file_name">Введите новое имя файла</string>
     <string name="settings">Настройки</string>
     <string name="bad_container_file_or_wrong_password">Неправильный пароль или испорченный файл контейнера</string>
-    <string name="app_shortcut"><xliff:g id="program_name">NeverCrypt</xliff:g> ссылка</string>
+    <string name="app_shortcut"><xliff:g id="program_name">0sakaCrypt</xliff:g> ссылка</string>
     <string name="enter_widget_title">Введите название виджета</string>
     <string name="select_path">Выбрать путь</string>
     <string name="container_size">Размер контейнера</string>
@@ -51,7 +51,7 @@
     <string name="free_space">Свободное пространство</string>
     <string name="saving_changes">Сохранение изменений</string>
     <string name="preparing_file">Подготовка файлов</string>
-    <string name="app_service_is_running">Работает служба <xliff:g id="program_name">NeverCrypt</xliff:g></string>
+    <string name="app_service_is_running">Работает служба <xliff:g id="program_name">0sakaCrypt</xliff:g></string>
     <string name="stop_service_and_exit">Выход</string>
     <string name="send_files_to">Отправить файлы</string>
     <string name="send">Отправить</string>
@@ -95,7 +95,7 @@
     <string name="show_previews">Показывать миниатюры в менеджере файлов</string>
     <string name="open_read_only">Открыть только для чтения</string>
     <string name="disable_wide_screen_layouts">Отключить портретный режим</string>
-    <string name="close_all_containers">Закрыть все контейнеры <xliff:g id="program_name">NeverCrypt</xliff:g></string>
+    <string name="close_all_containers">Закрыть все контейнеры <xliff:g id="program_name">0sakaCrypt</xliff:g></string>
     <string name="fill_free_space_with_random_data">Заполнить свободное пространство случайными данными</string>
     <string name="ascending">По возрастанию</string>
     <string name="descending">По убыванию</string>
@@ -172,7 +172,7 @@
     <string name="hidden">скрытый</string>
     <string name="overwrite_and_delete">Перезаписать и удалить</string>
     <string name="list_is_empty">Список пуст</string>
-    <string name="hide_app_screen_from_other_apps">Скрыть экран <xliff:g id="program_name">NeverCrypt</xliff:g> от других приложений</string>
+    <string name="hide_app_screen_from_other_apps">Скрыть экран <xliff:g id="program_name">0sakaCrypt</xliff:g> от других приложений</string>
     <string name="toggle_auto_zoom">Вкл/вкл автоматического масштабирования</string>
     <string name="change">Изменить</string>
     <string name="do_you_really_want_to_remove_from_the_list">Вы действительно хотите убрать \"%1$s\" из списка?</string>
@@ -182,7 +182,7 @@
     <string name="use_external_file_manager">Сторонний менеджер файлов</string>
     <string name="use_external_file_manager_desc">Открывать сторонний менеджер файлов после монтирования контейнера</string>
     <string name="builtin_file_manager">Встроенный менеджер файлов</string>
-    <string name="dont_use_content_provider">Не использовать content provider <xliff:g id="program_name">NeverCrypt</xliff:g> для открытия расшифрованных файлов в сторонних приложениях.</string>
+    <string name="dont_use_content_provider">Не использовать content provider <xliff:g id="program_name">0sakaCrypt</xliff:g> для открытия расшифрованных файлов в сторонних приложениях.</string>
     <string name="dont_use_content_provider_desc">Некоторые проиложения не поддерживают работу через content provider.</string>
     <string name="uri_of_the_container">URI контейнера</string>
     <string name="text_has_been_copied">Текст был скопирован в буфер обмена</string>

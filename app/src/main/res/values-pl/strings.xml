@@ -18,7 +18,7 @@
     <string name="enter_new_file_name">Podaj nową nazwę pliku</string>
     <string name="settings">Ustawienia</string>
     <string name="bad_container_file_or_wrong_password">Złe hasło lub nieprawidłowy format kontenera</string>
-    <string name="app_shortcut">Skrót do <xliff:g id="program_name">NeverCrypt</xliff:g></string>
+    <string name="app_shortcut">Skrót do <xliff:g id="program_name">0sakaCrypt</xliff:g></string>
     <string name="enter_widget_title">Podaj nazwę widżetu</string>
     <string name="select_path">Wybór ścieżki</string>
     <string name="container_size">Rozmiar kontenera</string>
@@ -37,7 +37,7 @@
     <string name="free_space">Wolna przestrzeń</string>
     <string name="saving_changes">Zapisz zmiany</string>
     <string name="preparing_file">Przygotowanie plików</string>
-    <string name="app_service_is_running">Usługa <xliff:g id="program_name">NeverCrypt</xliff:g> jest uruchomiona</string>
+    <string name="app_service_is_running">Usługa <xliff:g id="program_name">0sakaCrypt</xliff:g> jest uruchomiona</string>
     <string name="stop_service_and_exit">Zatrzymaj usługę i wyjdź</string>
     <string name="send_files_to">Wyślij pliki do</string>
     <string name="send">Wyślij</string>
@@ -77,7 +77,7 @@
     <string name="show_previews">Pokaż podgląd w menedżerze plików</string>
     <string name="open_read_only">Otwórz w trybie tylko odczyt</string>
     <string name="disable_wide_screen_layouts">Wyłącz format szerokiego ekranu</string>
-    <string name="close_all_containers">Zamknij wszystkie kontenery <xliff:g id="program_name">NeverCrypt</xliff:g></string>
+    <string name="close_all_containers">Zamknij wszystkie kontenery <xliff:g id="program_name">0sakaCrypt</xliff:g></string>
     <string name="fill_free_space_with_random_data">Wypełnij wolną przestrzeń losowymi danymi</string>
     <string name="ascending">Rosnąco</string>
     <string name="descending">Malejąco</string>
@@ -120,7 +120,7 @@
     <string name="save_password_desc">Zapisz hasło w kontenerze. Zapisanie hasła nie jest bezpieczne.</string>
     <string name="enable_full_screen_mode">Włącz tryb pełnoekranowy</string>
     <string name="never_save_history">Nigdy nie zapisuj linków do kontenerów</string>
-    <string name="never_save_history_desc">Linki do kontenerów będą usunięte, po zamknięciu programu <xliff:g id="program_name">NeverCrypt</xliff:g></string>
+    <string name="never_save_history_desc">Linki do kontenerów będą usunięte, po zamknięciu programu <xliff:g id="program_name">0sakaCrypt</xliff:g></string>
     <string name="no_free_space_left">Brak wolnej przestrzeni</string>
     <string name="speed">Bieżaca prędkość: %1$.1f Mb/s</string>
     <string name="container_format">Format kontenera</string>

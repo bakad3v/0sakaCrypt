@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <string name="add_container">Add container</string>
-    <string name="app_name" translatable="false"><xliff:g id="program_name">NeverCrypt</xliff:g></string>
+    <string name="app_name" translatable="false"><xliff:g id="program_name">0sakaCrypt</xliff:g></string>
     <string name="ok">OK</string>
     <string name="select">Select</string>
     <string name="enter_new_folder_name">Enter new folder name</string>
@@ -19,7 +19,7 @@
     <string name="enter_new_file_name">Enter new file name</string>
     <string name="settings">Settings</string>
     <string name="bad_container_file_or_wrong_password">Wrong password or unsupported container format</string>
-    <string name="app_shortcut"><xliff:g id="program_name">NeverCrypt</xliff:g> shortcut</string>
+    <string name="app_shortcut"><xliff:g id="program_name">0sakaCrypt</xliff:g> shortcut</string>
     <string name="enter_widget_title">Enter widget title</string>
     <string name="select_path">Select path</string>
     <string name="container_size">Container size</string>
@@ -52,7 +52,7 @@
     <string name="free_space">Free space</string>
     <string name="saving_changes">Saving changes</string>
     <string name="preparing_file">Preparing files</string>
-    <string name="app_service_is_running"><xliff:g id="program_name">NeverCrypt</xliff:g> service is running</string>
+    <string name="app_service_is_running"><xliff:g id="program_name">0sakaCrypt</xliff:g> service is running</string>
     <string name="stop_service_and_exit">Stop service and exit</string>
     <string name="send_files_to">Send files to</string>
     <string name="send">Send</string>
@@ -73,8 +73,8 @@
     <string name="about_message" translatable="false"><xliff:g id="copyright">\u00A9</xliff:g> 2012–2020</string>
     <string name="about">About</string>
     <string name="homepage">Open homepage</string>
-    <string name="about_notice">Work on this project is supported by IGEL Tech GmbH - https://www.igel-tech.com. If you have any professional inquiries, we would be happy to hear from you! However, the project is and always will be free (as in beer) and open source. If you would like to support the development by buying us a coffee, it would be greatly appreciated!</string>
-    <string name="fork_notice">This software is a fork of EDS Lite by Sovworks. See https://github.com/sovworks/edslite</string>
+    <string name="about_notice">Since 2026 this project is maintained by bakad3v. You can find out more information about usage of this program on github page - https://github.com/bakad3v/0sakaCrypt.</string>
+    <string name="fork_notice">This software is a fork of the NeverCrypt by IGEL Tech GmbH - https://www.igel-tech.com. It is a fork of EDS Lite by Sovworks. See https://github.com/sovworks/edslite</string>
     <string name="make_a_donation">Make a donation</string>
     <string name="check_source_code">Check the source code</string>
     <string name="opening_container">Opening container</string>
@@ -102,7 +102,7 @@
     <string name="show_previews">Show previews in the file manager</string>
     <string name="open_read_only">Open in read only mode</string>
     <string name="disable_wide_screen_layouts">Disable landscape layout</string>
-    <string name="close_all_containers">Close all <xliff:g id="program_name">NeverCrypt</xliff:g> containers</string>
+    <string name="close_all_containers">Close all <xliff:g id="program_name">0sakaCrypt</xliff:g> containers</string>
     <string name="fill_free_space_with_random_data">Fill free space with random data</string>
     <string name="ascending">Ascending</string>
     <string name="descending">Descending</string>
@@ -146,7 +146,7 @@
     <string name="save_password_desc">Save the password of the container. Saving a password may be insecure.</string>
     <string name="enable_full_screen_mode">Enable full screen mode</string>
     <string name="never_save_history">Never save links to containers</string>
-    <string name="never_save_history_desc">A link to the new container will be removed after you close <xliff:g id="program_name">NeverCrypt</xliff:g></string>
+    <string name="never_save_history_desc">A link to the new container will be removed after you close <xliff:g id="program_name">0sokaCrypt</xliff:g></string>
     <string name="no_free_space_left">No free space left</string>
     <string name="speed">Current speed: <xliff:g id="current_speed">%1$.1f</xliff:g> Mb/s</string>
     <string name="container_format">Container format</string>
@@ -172,7 +172,7 @@
     <string name="copy_here">Copy here</string>
     <string name="move_here">Move here</string>
     <string name="import_file">Import file</string>
-    <string name="number_of_kdf_iterations_veracrypt_descr">Enter the <xliff:g id="key_derivation_function">KDF</xliff:g> iterations multiplier (<xliff:g id="pim">PIM</xliff:g>). The greater value you choose the longer it will take to open the container. Enter 0 to use the default value. Check <xliff:g id="url">https://veracrypt.codeplex.com/wikipage?title=Personal%20Iterations%20Multiplier%20(PIM)</xliff:g> for details.</string>
+    <string name="number_of_kdf_iterations_veracrypt_descr">Enter the <xliff:g id="key_derivation_function">KDF</xliff:g> iterations multiplier (<xliff:g id="pim">PIM</xliff:g>). The greater value you choose the longer it will take to open the container. Enter 0 to use the default value. Check <xliff:g id="url">https://veracrypt.io/en/Personal%20Iterations%20Multiplier%20(PIM).html</xliff:g> for details.</string>
     <string name="kdf_iterations_multiplier"><xliff:g id="key_derivation_function">KDF</xliff:g> iterations multiplier (<xliff:g id="pim">PIM</xliff:g>)</string>
     <string name="container_format_is"><xliff:g id="formatting">&lt;p&gt;</xliff:g>Container format is <xliff:g id="formatting">&lt;b&gt;</xliff:g><xliff:g example="VeraCrypt" id="container_format">%1$s</xliff:g><xliff:g id="formatting">&lt;/b&gt;</xliff:g>.<xliff:g id="formatting">&lt;/p&gt;</xliff:g></string>
     <string name="encryption_alg_is"><xliff:g id="formatting">&lt;p&gt;</xliff:g>Encryption algorithm is <xliff:g id="formatting">&lt;b&gt;</xliff:g><xliff:g example="AES" id="encryption_algorithm_name">%1$s</xliff:g><xliff:g id="formatting">&lt;/b&gt;</xliff:g>.<xliff:g id="formatting">&lt;/p&gt;</xliff:g></string>
@@ -180,7 +180,7 @@
     <string name="hidden">hidden</string>
     <string name="overwrite_and_delete">Overwrite and delete</string>
     <string name="list_is_empty">The list is empty</string>
-    <string name="hide_app_screen_from_other_apps">Hide <xliff:g id="program_name">NeverCrypt</xliff:g> screen from other applications</string>
+    <string name="hide_app_screen_from_other_apps">Hide <xliff:g id="program_name">0sakaCrypt</xliff:g> screen from other applications</string>
     <string name="toggle_auto_zoom">Toggle auto zoom</string>
     <string name="change">Change</string>
     <string name="do_you_really_want_to_remove_from_the_list">Do you really want to remove <xliff:g id="title">\"%1$s\"</xliff:g> from the list?</string>
@@ -190,7 +190,7 @@
     <string name="use_external_file_manager">External file manager</string>
     <string name="use_external_file_manager_desc">Open an external file manager once the container has been mounted</string>
     <string name="builtin_file_manager">Built-in file manager</string>
-    <string name="dont_use_content_provider">Don\'t use NeverCrypt content provider to open decrypted files in other applications.</string>
+    <string name="dont_use_content_provider">Don\'t use 0sakaCrypt content provider to open decrypted files in other applications.</string>
     <string name="dont_use_content_provider_desc">Some applications can\'t work with content providers.</string>
     <string name="uri_of_the_container">URI of the container</string>
     <string name="text_has_been_copied">Text has been copied to the clipboard</string>
@@ -224,4 +224,5 @@
     <string name="container_opened_read_only">The container has been opened in read-only mode.</string>
     <string name="service_notifications_channel_name">Service notifications</string>
     <string name="file_operations_notifications_channel_name">File operation notifications</string>
+    <string name="donate_crypto">You can support me using crypto.\nXMR: 88Z5fsVK6FP4oVNjo2BrHydAEa5Y1gTPi5d7BN68sjVDZ9dTn8wPb89WmUxrxf3T37bRGSR5dekkU9aQ7j8ErWcBJ2GZojC\nLTC: ltc1qtfhun6yzt0qlpa9d6s8gr2yd70sg0kx755u3se\nBTC: bc1qn9a9eyy2vgrz8yvhk0654d63dt56pxhpn6q4xl\nBTC lightning: dualwhorl66@walletofsatoshi.com</string>
 </resources>

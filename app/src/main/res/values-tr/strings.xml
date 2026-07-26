@@ -16,7 +16,7 @@
     <string name="enter_new_file_name">Yeni Dosya İsmi Gir</string>
     <string name="settings">Ayarlar</string>
     <string name="bad_container_file_or_wrong_password">Konteyner Dosyası Değil veya Hatalı Şifre</string>
-    <string name="app_shortcut"><xliff:g id="program_name">NeverCrypt</xliff:g> Kısayolu</string>
+    <string name="app_shortcut"><xliff:g id="program_name">0sakaCrypt</xliff:g> Kısayolu</string>
     <string name="enter_widget_title">Widget Başlığı Gir</string>
     <string name="select_path">Yol Seç</string>
     <string name="container_size">Konteyner Boyutu</string>
@@ -34,7 +34,7 @@
     <string name="free_space">Boş Alan</string>
     <string name="saving_changes">Değişiklikler Kaydediliyor</string>
     <string name="preparing_file">Dosyalar Hazırlanıyor</string>
-    <string name="app_service_is_running"><xliff:g id="program_name">NeverCrypt</xliff:g> Servisi Çalışıyor</string>
+    <string name="app_service_is_running"><xliff:g id="program_name">0sakaCrypt</xliff:g> Servisi Çalışıyor</string>
     <string name="stop_service_and_exit">Servisi Durdur ve ÇIK</string>
     <string name="send_files_to">Dosyayı Gönder..</string>
     <string name="send">Gönder</string>

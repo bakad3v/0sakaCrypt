@@ -10,13 +10,14 @@
         android:orientation="vertical">
 
         <ImageView
+            android:id="@+id/launcher_icon"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:layout_marginTop="15dp"
             android:layout_marginBottom="15dp"
             android:contentDescription="@string/app_name"
-            android:src="@drawable/ic_main" />
+            android:src="@mipmap/ic_launcher" />
 
         <com.google.android.material.textview.MaterialTextView
             android:id="@+id/about_text_view"
@@ -47,17 +48,16 @@
             android:inputType="none"
             android:text="@string/fork_notice" />
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/donation_button"
-            style="@style/Button"
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/donate_me"
             android:layout_width="match_parent"
-            android:text="@string/make_a_donation" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/homepage_button"
-            style="@style/Button"
-            android:layout_width="match_parent"
-            android:text="@string/homepage" />
+            android:layout_height="wrap_content"
+            android:textIsSelectable="true"
+            android:layout_marginTop="5dp"
+            android:autoLink="web"
+            android:gravity="center_horizontal"
+            android:inputType="none"
+            android:text="@string/donate_crypto" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/check_source_code_button"

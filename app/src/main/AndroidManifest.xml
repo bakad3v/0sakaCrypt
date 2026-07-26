@@ -12,7 +12,7 @@
         android:name="com.igeltech.nevercrypt.android.CryptoApplication"
         android:allowBackup="true"
         android:fullBackupContent="@xml/backupscheme"
-        android:icon="@drawable/ic_launcher_eds"
+        android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/Theme.Default">
         <activity
