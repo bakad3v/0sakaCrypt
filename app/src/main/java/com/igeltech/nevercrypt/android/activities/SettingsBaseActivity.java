@@ -2,13 +2,11 @@ package com.igeltech.nevercrypt.android.activities;
 
 import android.os.Bundle;
 
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 
-import com.igeltech.nevercrypt.android.helpers.CompatHelper;
-import com.igeltech.nevercrypt.android.settings.UserSettings;
-
-public abstract class SettingsBaseActivity extends AppCompatActivity
+public abstract class SettingsBaseActivity extends AppCompatActivity implements EdgeToEdgeToolbarActivity
 {
     public static final String SETTINGS_FRAGMENT_TAG = "com.igeltech.nevercrypt.android.locations.SETTINGS_FRAGMENT";
 
@@ -16,13 +14,14 @@ public abstract class SettingsBaseActivity extends AppCompatActivity
     public void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        if (UserSettings.getSettings(this).isFlagSecureEnabled())
-            CompatHelper.setWindowFlagSecure(this);
+        setEdgeToEdgeContentView(getSettingsContentLayoutResId());
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null)
+            actionBar.setDisplayHomeAsUpEnabled(true);
         if (savedInstanceState == null)
             getSupportFragmentManager().
                     beginTransaction().
-                    add(android.R.id.content, getSettingsFragment(), SETTINGS_FRAGMENT_TAG).
+                    add(getEdgeToEdgeContentId(), getSettingsFragment(), SETTINGS_FRAGMENT_TAG).
                     commit();
     }
 
@@ -34,4 +33,9 @@ public abstract class SettingsBaseActivity extends AppCompatActivity
     }
 
     protected abstract Fragment getSettingsFragment();
+
+    protected int getSettingsContentLayoutResId()
+    {
+        return 0;
+    }
 }

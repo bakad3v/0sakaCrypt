@@ -13,6 +13,19 @@ public class FormatInfo extends com.igeltech.nevercrypt.truecrypt.FormatInfo
     }
 
     @Override
+    public VolumeLayout getHiddenVolumeLayout()
+    {
+        return new HiddenVolumeLayout();
+    }
+
+    @Override
+    public boolean hasHiddenContainerSupport()
+    {
+        return true;
+    }
+
+
+    @Override
     public VolumeLayout getVolumeLayout()
     {
         return new com.igeltech.nevercrypt.veracrypt.VolumeLayout();

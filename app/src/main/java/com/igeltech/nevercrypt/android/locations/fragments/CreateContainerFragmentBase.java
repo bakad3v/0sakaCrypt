@@ -1,5 +1,7 @@
 package com.igeltech.nevercrypt.android.locations.fragments;
 
+import android.os.Bundle;
+
 import com.igeltech.nevercrypt.android.R;
 import com.igeltech.nevercrypt.android.dialogs.PasswordDialog;
 import com.igeltech.nevercrypt.android.dialogs.PasswordDialogBase;
@@ -19,6 +21,7 @@ import com.igeltech.nevercrypt.android.settings.container.FillFreeSpacePropertyE
 import com.igeltech.nevercrypt.android.settings.container.HashingAlgorithmPropertyEditor;
 import com.igeltech.nevercrypt.android.settings.container.PIMPropertyEditor;
 import com.igeltech.nevercrypt.android.settings.container.PathToContainerPropertyEditor;
+import com.igeltech.nevercrypt.android.settings.container.SaveVolumeSettingsPropertyEditor;
 import com.igeltech.nevercrypt.android.settings.encfs.BlockSizePropertyEditor;
 import com.igeltech.nevercrypt.android.settings.encfs.DataCodecPropertyEditor;
 import com.igeltech.nevercrypt.android.settings.encfs.EnableEmptyBlocksPropertyEditor;
@@ -34,6 +37,8 @@ import com.igeltech.nevercrypt.container.Container;
 import com.igeltech.nevercrypt.container.ContainerFormatInfo;
 import com.igeltech.nevercrypt.container.LocationFormatter;
 import com.igeltech.nevercrypt.container.VolumeLayout;
+import com.igeltech.nevercrypt.crypto.SecureBuffer;
+import com.igeltech.nevercrypt.locations.Openable;
 
 public abstract class CreateContainerFragmentBase extends CreateLocationFragment implements PasswordDialogBase.PasswordReceiver
 {
@@ -55,6 +60,52 @@ public abstract class CreateContainerFragmentBase extends CreateLocationFragment
     }
 
     @Override
+    public void onCreate(Bundle state) {
+        Bundle args = getArguments();
+        if (args != null)
+            _state.putAll(args);
+        super.onCreate(state);
+    }
+
+    @Override
+    public void onDestroy() {
+        SecureBuffer sb = _state.getParcelable(CreateContainerTaskFragmentBase.ARG_HIDDEN_PASSWORD);
+        if (sb != null)
+        {
+            sb.close();
+            _state.remove(CreateContainerTaskFragmentBase.ARG_HIDDEN_PASSWORD);
+        }
+        super.onDestroy();
+    }
+
+    /**
+     * Moves the current state to the next wizard fragment without letting this fragment close shared secrets.
+     */
+    protected Bundle transferStateToNextFragment()
+    {
+        Bundle res = new Bundle(_state);
+        _state.remove(Openable.PARAM_PASSWORD);
+        _state.remove(CreateContainerTaskFragmentBase.ARG_HIDDEN_PASSWORD);
+        return res;
+    }
+
+    /**
+     * Returns the volume layout used to populate hidden-volume-only option lists.
+     */
+    public VolumeLayout getSelectedHiddenVolumeLayout()
+    {
+        ContainerFormatInfo info = getCurrentContainerFormatInfo();
+        return info == null || !info.hasHiddenContainerSupport() ? null : info.getHiddenVolumeLayout();
+    }
+
+    /**
+     * Lets concrete fragments update controls that depend on hidden-volume support.
+     */
+    public void changeHiddenVolumeDependentOptions()
+    {
+    }
+
+    @Override
     protected TaskFragment createAddExistingLocationTask()
     {
         return AddExistingContainerTaskFragment.newInstance(_state.getParcelable(CreateContainerTaskFragmentBase.ARG_LOCATION), !UserSettings.getSettings(getActivity()).neverSaveHistory(), _state.getString(CreateContainerTaskFragmentBase.ARG_CONTAINER_FORMAT));
@@ -71,6 +122,7 @@ public abstract class CreateContainerFragmentBase extends CreateLocationFragment
     {
         super.showCreateNewLocationProperties();
         _propertiesView.setPropertyState(R.string.container_format, true);
+        changeHiddenVolumeDependentOptions();
     }
 
     @Override
@@ -94,9 +146,9 @@ public abstract class CreateContainerFragmentBase extends CreateLocationFragment
     @Override
     protected void createProperties()
     {
+        initDefaultContainerFormat();
+        applyDefaultFillFreeSpaceForCurrentFormat();
         super.createProperties();
-        if (!_state.containsKey(CreateContainerTaskFragmentBase.ARG_CONTAINER_FORMAT))
-            _state.putString(CreateContainerTaskFragmentBase.ARG_CONTAINER_FORMAT, Container.getSupportedFormats().get(1).getFormatName());
     }
 
     @Override
@@ -114,6 +166,24 @@ public abstract class CreateContainerFragmentBase extends CreateLocationFragment
         return Container.findFormatByName(_state.getString(CreateContainerTaskFragmentBase.ARG_CONTAINER_FORMAT));
     }
 
+    public void applyDefaultFillFreeSpaceForCurrentFormat()
+    {
+        if (_state.getBoolean(CreateContainerTaskFragmentBase.ARG_FILL_FREE_SPACE_USER_SET, false))
+            return;
+        _state.putBoolean(
+                CreateContainerTaskFragmentBase.ARG_FILL_FREE_SPACE,
+                com.igeltech.nevercrypt.veracrypt.FormatInfo.FORMAT_NAME.equals(
+                        _state.getString(CreateContainerTaskFragmentBase.ARG_CONTAINER_FORMAT)
+                )
+        );
+    }
+
+    private void initDefaultContainerFormat()
+    {
+        if (!_state.containsKey(CreateContainerTaskFragmentBase.ARG_CONTAINER_FORMAT))
+            _state.putString(CreateContainerTaskFragmentBase.ARG_CONTAINER_FORMAT, com.igeltech.nevercrypt.veracrypt.FormatInfo.FORMAT_NAME);
+    }
+
     protected void createContainerProperties()
     {
         _propertiesView.addProperty(new PIMPropertyEditor(this));
@@ -122,6 +192,7 @@ public abstract class CreateContainerFragmentBase extends CreateLocationFragment
         _propertiesView.addProperty(new HashingAlgorithmPropertyEditor(this));
         _propertiesView.addProperty(new FileSystemTypePropertyEditor(this));
         _propertiesView.addProperty(new FillFreeSpacePropertyEditor(this));
+        _propertiesView.addProperty(new SaveVolumeSettingsPropertyEditor(this));
     }
 
     private void createEncFsProperties()

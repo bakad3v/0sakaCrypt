@@ -9,6 +9,7 @@ import com.igeltech.nevercrypt.android.errors.WrongPasswordOrBadContainerExcepti
 import com.igeltech.nevercrypt.android.fragments.TaskFragment;
 import com.igeltech.nevercrypt.crypto.SecureBuffer;
 import com.igeltech.nevercrypt.exceptions.WrongPasswordException;
+import com.igeltech.nevercrypt.locations.ContainerLocation;
 import com.igeltech.nevercrypt.locations.Location;
 import com.igeltech.nevercrypt.locations.LocationsManager;
 import com.igeltech.nevercrypt.locations.Openable;
@@ -78,7 +79,18 @@ public class LocationOpenerFragmentCommon extends LocationOpenerBaseFragment imp
                     args.putParcelable(Openable.PARAM_PASSWORD, new SecureBuffer(val.toCharArray()));
             }
             if (defaultArgs.containsKey(Openable.PARAM_KDF_ITERATIONS) && !args.containsKey(Openable.PARAM_KDF_ITERATIONS))
-                args.putInt(Openable.PARAM_KDF_ITERATIONS, args.getInt(Openable.PARAM_KDF_ITERATIONS));
+                args.putInt(Openable.PARAM_KDF_ITERATIONS, defaultArgs.getInt(Openable.PARAM_KDF_ITERATIONS));
+            // Carry one-shot container hints that were supplied directly to the opener fragment.
+            copyStringParam(defaultArgs, args, Openable.PARAM_CIPHER_NAME, false);
+            copyStringParam(defaultArgs, args, Openable.PARAM_CIPHER_MODE_NAME, false);
+            copyStringParam(defaultArgs, args, Openable.PARAM_HASHING_ALG, false);
+            // Hidden-volume protection is also one-shot and must preserve SecureBuffer ownership.
+            copyBooleanParam(defaultArgs, args, Openable.PARAM_PROTECT_HIDDEN_VOLUME, false);
+            copySecureBufferParam(defaultArgs, args, Openable.PARAM_HIDDEN_VOLUME_PASSWORD, false);
+            copyIntParam(defaultArgs, args, Openable.PARAM_HIDDEN_VOLUME_KDF_ITERATIONS, false);
+            copyStringParam(defaultArgs, args, Openable.PARAM_HIDDEN_VOLUME_CIPHER_NAME, false);
+            copyStringParam(defaultArgs, args, Openable.PARAM_HIDDEN_VOLUME_CIPHER_MODE_NAME, false);
+            copyStringParam(defaultArgs, args, Openable.PARAM_HIDDEN_VOLUME_HASHING_ALG, false);
         }
         return args;
     }
@@ -100,6 +112,65 @@ public class LocationOpenerFragmentCommon extends LocationOpenerBaseFragment imp
         }
         if (passwordDialogResultBundle.containsKey(Openable.PARAM_KDF_ITERATIONS))
             args.putInt(Openable.PARAM_KDF_ITERATIONS, passwordDialogResultBundle.getInt(Openable.PARAM_KDF_ITERATIONS));
+        // User-selected options from the password dialog must replace any opener defaults.
+        copyStringParam(passwordDialogResultBundle, args, Openable.PARAM_CIPHER_NAME, true);
+        copyStringParam(passwordDialogResultBundle, args, Openable.PARAM_CIPHER_MODE_NAME, true);
+        copyStringParam(passwordDialogResultBundle, args, Openable.PARAM_HASHING_ALG, true);
+        // Dialog options override defaults, including protection state and hidden password.
+        copyBooleanParam(passwordDialogResultBundle, args, Openable.PARAM_PROTECT_HIDDEN_VOLUME, true);
+        copySecureBufferParam(passwordDialogResultBundle, args, Openable.PARAM_HIDDEN_VOLUME_PASSWORD, true);
+        copyIntParam(passwordDialogResultBundle, args, Openable.PARAM_HIDDEN_VOLUME_KDF_ITERATIONS, true);
+        copyStringParam(passwordDialogResultBundle, args, Openable.PARAM_HIDDEN_VOLUME_CIPHER_NAME, true);
+        copyStringParam(passwordDialogResultBundle, args, Openable.PARAM_HIDDEN_VOLUME_CIPHER_MODE_NAME, true);
+        copyStringParam(passwordDialogResultBundle, args, Openable.PARAM_HIDDEN_VOLUME_HASHING_ALG, true);
+    }
+
+    /**
+     * Copies an optional string parameter while preserving explicit empty values used to clear hints.
+     */
+    private void copyStringParam(Bundle src, Bundle dst, String key, boolean overwrite)
+    {
+        if (src.containsKey(key) && (overwrite || !dst.containsKey(key)))
+        {
+            String val = src.getString(key);
+            if (val != null)
+                dst.putString(key, val);
+            else if (overwrite)
+                dst.remove(key);
+        }
+    }
+
+    /**
+     * Copies a one-shot boolean option while respecting the caller's overwrite policy.
+     */
+    private void copyBooleanParam(Bundle src, Bundle dst, String key, boolean overwrite)
+    {
+        if (src.containsKey(key) && (overwrite || !dst.containsKey(key)))
+            dst.putBoolean(key, src.getBoolean(key));
+    }
+
+    /**
+     * Copies a one-shot integer option while respecting the caller's overwrite policy.
+     */
+    private void copyIntParam(Bundle src, Bundle dst, String key, boolean overwrite)
+    {
+        if (src.containsKey(key) && (overwrite || !dst.containsKey(key)))
+            dst.putInt(key, src.getInt(key));
+    }
+
+    /**
+     * Copies a SecureBuffer by reference so password bytes are not converted to immutable strings.
+     */
+    private void copySecureBufferParam(Bundle src, Bundle dst, String key, boolean overwrite)
+    {
+        if (src.containsKey(key) && (overwrite || !dst.containsKey(key)))
+        {
+            SecureBuffer val = src.getParcelable(key);
+            if (val != null)
+                dst.putParcelable(key, val);
+            else if (overwrite)
+                dst.remove(key);
+        }
     }
 
     protected void askPassword()
@@ -148,8 +219,22 @@ public class LocationOpenerFragmentCommon extends LocationOpenerBaseFragment imp
             location.setOpeningProgressReporter(_openingProgressReporter);
             if (param.containsKey(Openable.PARAM_PASSWORD))
                 location.setPassword(param.getParcelable(Openable.PARAM_PASSWORD));
-            if (param.containsKey(Openable.PARAM_KDF_ITERATIONS))
-                location.setNumKDFIterations(param.getInt(Openable.PARAM_KDF_ITERATIONS));
+            location.setNumKDFIterations(param.getInt(Openable.PARAM_KDF_ITERATIONS, 0));
+            // Container-specific one-shot hints are applied immediately before opening.
+            if (location instanceof ContainerLocation)
+            {
+                ContainerLocation containerLocation = (ContainerLocation) location;
+                containerLocation.setOpeningEncryptionEngineHint(param.getString(Openable.PARAM_CIPHER_NAME), param.getString(Openable.PARAM_CIPHER_MODE_NAME));
+                containerLocation.setOpeningHashFuncHint(param.getString(Openable.PARAM_HASHING_ALG));
+                // Pass protection options immediately before open(); the container location owns cleanup.
+                containerLocation.setHiddenVolumeProtection(
+                        param.getBoolean(Openable.PARAM_PROTECT_HIDDEN_VOLUME, false),
+                        param.getParcelable(Openable.PARAM_HIDDEN_VOLUME_PASSWORD),
+                        param.getInt(Openable.PARAM_HIDDEN_VOLUME_KDF_ITERATIONS, 0),
+                        param.getString(Openable.PARAM_HIDDEN_VOLUME_CIPHER_NAME),
+                        param.getString(Openable.PARAM_HIDDEN_VOLUME_CIPHER_MODE_NAME),
+                        param.getString(Openable.PARAM_HIDDEN_VOLUME_HASHING_ALG));
+            }
             location.open();
         }
 

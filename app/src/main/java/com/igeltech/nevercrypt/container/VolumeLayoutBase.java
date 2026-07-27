@@ -22,7 +22,7 @@ import java.util.concurrent.CancellationException;
 
 public abstract class VolumeLayoutBase implements VolumeLayout
 {
-    protected static final int SECTOR_SIZE = 512;
+    public static final int SECTOR_SIZE = 512;
     protected FileEncryptionEngine _encEngine;
     protected MessageDigest _hashFunc;
     protected byte[] _masterKey;

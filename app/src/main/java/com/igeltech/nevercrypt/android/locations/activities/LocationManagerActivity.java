@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.view.ContextMenu;
 import android.view.View;
 
+import androidx.core.content.ContextCompat;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
@@ -16,16 +17,15 @@ import androidx.navigation.ui.NavigationUI;
 
 import com.igeltech.nevercrypt.android.Logger;
 import com.igeltech.nevercrypt.android.R;
+import com.igeltech.nevercrypt.android.activities.EdgeToEdgeToolbarActivity;
 import com.igeltech.nevercrypt.android.filemanager.tasks.CheckStartPathTask;
 import com.igeltech.nevercrypt.android.helpers.AppInitHelper;
-import com.igeltech.nevercrypt.android.helpers.CompatHelper;
-import com.igeltech.nevercrypt.android.settings.UserSettings;
 import com.igeltech.nevercrypt.locations.LocationsManager;
 import com.trello.rxlifecycle3.components.support.RxAppCompatActivity;
 
 import java.util.concurrent.CancellationException;
 
-public class LocationManagerActivity extends RxAppCompatActivity
+public class LocationManagerActivity extends RxAppCompatActivity implements EdgeToEdgeToolbarActivity
 {
     public static final String TAG = "LocationManagerActivity";
     protected static final String FOLDER_MIME_TYPE = "resource/folder";
@@ -45,17 +45,14 @@ public class LocationManagerActivity extends RxAppCompatActivity
     public void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_locationmanager);
+        setEdgeToEdgeContentView(R.layout.content_locationmanager);
         // Widget setup
         NavController navController = Navigation.findNavController(this, R.id.nav_host_locationmanager);
         appBarConfiguration = new AppBarConfiguration.Builder(navController.getGraph()).build();
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
-        // Security
-        if (UserSettings.getSettings(this).isFlagSecureEnabled())
-            CompatHelper.setWindowFlagSecure(this);
         Logger.debug("lm start activity: " + getIntent());
         // Register broadcasts
-        registerReceiver(_closeAllReceiver, new IntentFilter(LocationsManager.BROADCAST_CLOSE_ALL));
+        ContextCompat.registerReceiver(this, _closeAllReceiver, new IntentFilter(LocationsManager.BROADCAST_CLOSE_ALL), ContextCompat.RECEIVER_NOT_EXPORTED);
         // Check master password, if any
         AppInitHelper.
                 createObservable(this).

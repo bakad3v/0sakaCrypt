@@ -3,66 +3,38 @@ package com.igeltech.nevercrypt.android.settings.container;
 import com.igeltech.nevercrypt.android.R;
 import com.igeltech.nevercrypt.android.locations.fragments.CreateContainerFragmentBase;
 import com.igeltech.nevercrypt.android.locations.tasks.CreateContainerTaskFragmentBase;
-import com.igeltech.nevercrypt.android.settings.ChoiceDialogPropertyEditor;
+import com.igeltech.nevercrypt.android.locations.tasks.CreateLocationTaskFragmentBase;
 import com.igeltech.nevercrypt.container.VolumeLayout;
-import com.igeltech.nevercrypt.container.VolumeLayoutBase;
 import com.igeltech.nevercrypt.crypto.EncryptionEngine;
 import com.igeltech.nevercrypt.crypto.FileEncryptionEngine;
-import com.igeltech.nevercrypt.truecrypt.EncryptionEnginesRegistry;
+import com.igeltech.nevercrypt.locations.Openable;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class EncryptionAlgorithmPropertyEditor extends ChoiceDialogPropertyEditor
+public class EncryptionAlgorithmPropertyEditor extends EncryptionAlgorithmPropertyEditorBase
 {
+    private final String _cipherNameKey;
+    private final String _cipherModeNameKey;
+    private final boolean _hiddenVolume;
+
+    /**
+     * Creates the default encryption algorithm editor for the outer volume.
+     */
     public EncryptionAlgorithmPropertyEditor(CreateContainerFragmentBase createContainerFragment)
     {
-        super(createContainerFragment, R.string.encryption_algorithm, 0, createContainerFragment.getTag());
+        this(createContainerFragment, R.string.encryption_algorithm, Openable.PARAM_CIPHER_NAME, Openable.PARAM_CIPHER_MODE_NAME, false);
     }
 
-    public static String getEncEngineName(EncryptionEngine eng)
+    /**
+     * Creates an encryption algorithm editor bound to either outer or hidden volume state keys.
+     */
+    public EncryptionAlgorithmPropertyEditor(CreateContainerFragmentBase createContainerFragment, int titleResId, String cipherNameKey, String cipherModeNameKey, boolean hiddenVolume)
     {
-        return EncryptionEnginesRegistry.getEncEngineName(eng);
-    }
-
-    @Override
-    protected int loadValue()
-    {
-        List<? extends EncryptionEngine> algs = getCurrentEncAlgList();
-        String encAlgName = getHostFragment().getState().getString(CreateContainerTaskFragmentBase.ARG_CIPHER_NAME);
-        String encModeName = getHostFragment().getState().getString(CreateContainerTaskFragmentBase.ARG_CIPHER_MODE_NAME);
-        if (encAlgName != null && encModeName != null)
-        {
-            EncryptionEngine ee = VolumeLayoutBase.findCipher(algs, encAlgName, encModeName);
-            return algs.indexOf(ee);
-        }
-        else if (!algs.isEmpty())
-            return 0;
-        else
-            return -1;
-    }
-
-    @Override
-    protected void saveValue(int value)
-    {
-        List<? extends EncryptionEngine> algs = getCurrentEncAlgList();
-        EncryptionEngine ee = algs.get(value);
-        getHostFragment().getState().putString(CreateContainerTaskFragmentBase.ARG_CIPHER_NAME, ee.getCipherName());
-        getHostFragment().getState().putString(CreateContainerTaskFragmentBase.ARG_CIPHER_MODE_NAME, ee.getCipherModeName());
-    }
-
-    @Override
-    protected ArrayList<String> getEntries()
-    {
-        ArrayList<String> res = new ArrayList<>();
-        List<? extends EncryptionEngine> supportedEngines = getCurrentEncAlgList();
-        if (supportedEngines != null)
-        {
-            for (EncryptionEngine eng : supportedEngines)
-                res.add(getEncEngineName(eng));
-        }
-        return res;
+        super(createContainerFragment, titleResId, 0, false);
+        _cipherNameKey = cipherNameKey;
+        _cipherModeNameKey = cipherModeNameKey;
+        _hiddenVolume = hiddenVolume;
     }
 
     protected CreateContainerFragmentBase getHostFragment()
@@ -70,9 +42,37 @@ public class EncryptionAlgorithmPropertyEditor extends ChoiceDialogPropertyEdito
         return (CreateContainerFragmentBase) getHost();
     }
 
-    private List<? extends EncryptionEngine> getCurrentEncAlgList()
+    /**
+     * Returns the encryption algorithms supported by the currently selected outer or hidden layout.
+     */
+    @Override
+    protected List<? extends EncryptionEngine> getCurrentEncAlgList()
     {
-        VolumeLayout vl = getHostFragment().getSelectedVolumeLayout();
+        VolumeLayout vl = _hiddenVolume ? getHostFragment().getSelectedHiddenVolumeLayout() : getHostFragment().getSelectedVolumeLayout();
         return vl != null ? vl.getSupportedEncryptionEngines() : Collections.<FileEncryptionEngine>emptyList();
+    }
+
+    @Override
+    protected boolean hasSavedAlgorithmSelection()
+    {
+        return getHostFragment().getState().containsKey(_cipherNameKey) || getHostFragment().getState().containsKey(_cipherModeNameKey);
+    }
+
+    @Override
+    protected int findSavedAlgorithmIndex(List<? extends EncryptionEngine> algs)
+    {
+        return findEngineIndexByCipherAndMode(algs, getHostFragment().getState().getString(_cipherNameKey), getHostFragment().getState().getString(_cipherModeNameKey));
+    }
+
+    @Override
+    protected void saveAlgorithmValue(EncryptionEngine engine)
+    {
+        getHostFragment().getState().putString(_cipherNameKey, engine.getCipherName());
+        getHostFragment().getState().putString(_cipherModeNameKey, engine.getCipherModeName());
+    }
+
+    @Override
+    protected void saveAutoDetectValue()
+    {
     }
 }

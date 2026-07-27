@@ -1,24 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    package="com.igeltech.nevercrypt.android">
+    xmlns:tools="http://schemas.android.com/tools">
 
     <supports-screens android:anyDensity="true" />
 
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
 
     <application
         android:name="com.igeltech.nevercrypt.android.CryptoApplication"
         android:allowBackup="true"
         android:fullBackupContent="@xml/backupscheme"
-        android:icon="@drawable/ic_launcher_eds"
+        android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/Theme.Default">
         <activity
             android:name=".locations.activities.LocationManagerActivity"
             android:label="@string/app_name"
             android:exported="true"
+            android:theme="@style/Theme.Default.NoActionBar"
             android:windowSoftInputMode="adjustPan">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -27,7 +28,8 @@
         </activity>
         <activity
             android:name=".filemanager.activities.FileManagerActivity"
-            android:exported="true">
+            android:exported="true"
+            android:theme="@style/Theme.Default.NoActionBar">
             <intent-filter>
                 <category android:name="android.intent.category.DEFAULT" />
 
@@ -69,13 +71,16 @@
         </activity>
         <activity
             android:name=".locations.activities.CreateLocationActivity"
+            android:theme="@style/Theme.Default.NoActionBar"
             android:windowSoftInputMode="adjustPan" />
         <activity
             android:name=".locations.activities.LocationSettingsActivity"
+            android:theme="@style/Theme.Default.NoActionBar"
             android:label="@string/settings"
             android:windowSoftInputMode="adjustPan" />
         <activity
             android:name=".activities.LocationShortcutWidgetConfigActivity"
+            android:theme="@style/Theme.Default.NoActionBar"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
@@ -102,25 +107,24 @@
         <activity
             android:name=".settings.activities.ProgramSettingsActivity"
             android:label="@string/settings"
+            android:theme="@style/Theme.Default.NoActionBar"
             android:launchMode="singleTop"
             android:windowSoftInputMode="adjustPan" />
         <activity
             android:name=".settings.activities.OpeningOptionsActivity"
             android:label="@string/settings"
+            android:theme="@style/Theme.Default.NoActionBar"
             android:windowSoftInputMode="adjustPan" />
 
-        <service android:name=".service.FileOpsService" />
-        <service android:name=".service.LocationsService" />
+        <service android:name=".service.FileOpsService" android:foregroundServiceType="dataSync"/>
+        <service android:name=".service.LocationsService" android:foregroundServiceType="dataSync"/>
 
         <receiver
             android:name=".widgets.LocationShortcutWidget"
-            android:exported="true"
+            android:exported="false"
             android:label="@string/app_shortcut">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-            </intent-filter>
-            <intent-filter>
-                <action android:name="com.igeltech.nevercrypt.android.BROADCAST_LOCATION_CHANGED" />
             </intent-filter>
 
             <meta-data
@@ -129,22 +133,20 @@
         </receiver>
         <receiver
             android:name=".widgets.CloseAllContainersWidget"
-            android:exported="true"
+            android:exported="false"
             android:label="@string/close_all_containers">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-            </intent-filter>
-            <intent-filter>
-                <action android:name="com.igeltech.nevercrypt.android.BROADCAST_LOCATION_CHANGED" />
-            </intent-filter>
-            <intent-filter>
-                <action android:name="com.igeltech.nevercrypt.android.BROADCAST_ALL_CONTAINERS_CLOSED" />
             </intent-filter>
 
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/close_all_containers_widget_info" />
         </receiver>
+        <receiver
+            android:name="androidx.profileinstaller.ProfileInstallReceiver"
+            android:exported="false"
+            tools:replace="android:exported" />
 
         <provider
             android:name=".providers.MainContentProvider"

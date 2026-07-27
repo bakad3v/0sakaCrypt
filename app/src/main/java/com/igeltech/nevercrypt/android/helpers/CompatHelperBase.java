@@ -1,5 +1,6 @@
 package com.igeltech.nevercrypt.android.helpers;
 
+import android.app.Activity;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.ClipData;
@@ -25,9 +26,19 @@ public class CompatHelperBase
     private static String serviceRunningNotificationsChannelId;
     private static String fileOperationsNotificationsChannelId;
 
-    public static void setWindowFlagSecure(AppCompatActivity act)
+    public static void setWindowFlagSecure(Activity act)
     {
-        act.getWindow().setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE);
+        setWindowFlagSecure(act, true);
+    }
+
+    public static void setWindowFlagSecure(Activity act, boolean enabled)
+    {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+            act.setRecentsScreenshotEnabled(!enabled);
+        if (enabled)
+            act.getWindow().setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE);
+        else
+            act.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_SECURE);
     }
 
     public static void restartActivity(AppCompatActivity activity)

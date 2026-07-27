@@ -3,6 +3,7 @@ package com.igeltech.nevercrypt.fs.exfat;
 import com.igeltech.nevercrypt.fs.FileSystem;
 import com.igeltech.nevercrypt.fs.Path;
 import com.igeltech.nevercrypt.fs.RandomAccessIO;
+import com.igeltech.nevercrypt.fs.VolumeSizeLimiter;
 import com.igeltech.nevercrypt.fs.util.FileStat;
 import com.igeltech.nevercrypt.fs.util.Util;
 
@@ -10,7 +11,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 
-public class ExFat implements FileSystem
+public class ExFat implements FileSystem, VolumeSizeLimiter
 {
     private static final byte[] EXFAT_SIGN = new byte[]{'E', 'X', 'F', 'A', 'T', ' ', ' ', ' '};
     private static final int MIN_COMPATIBLE_NATIVE_MODULE_VERSION = 1001;
@@ -90,6 +91,23 @@ public class ExFat implements FileSystem
         return getFreeSpaceStartOffset();
     }
 
+    /**
+     * Applies the protected writable size used when an outer volume is opened with hidden protection.
+     */
+    @Override
+    public void setVolumeSizeLimit(long volumeSizeLimit) throws IOException
+    {
+        if (volumeSizeLimit <= 0)
+            throw new IllegalArgumentException("volumeSizeLimit <= 0");
+        synchronized (_sync)
+        {
+            // The native layer keeps this as an in-memory cap and returns ENOSPC past the boundary.
+            int res = setVolumeSizeLimit(_exfatPtr, volumeSizeLimit);
+            if (res != 0)
+                throw new IOException("Failed setting exFAT volume size limit. Error code = " + res);
+        }
+    }
+
     public void overwriteFreeSpace() throws IOException
     {
         int res = randFreeSpace();
@@ -108,6 +126,9 @@ public class ExFat implements FileSystem
     native long getFreeSpace();
 
     native long getTotalSpace();
+
+    // In-memory cap used by hidden-volume protection; it does not modify the on-disk exFAT metadata.
+    native int setVolumeSizeLimit(long handle, long volumeSizeLimit);
 
     native int rename(String oldPath, String newPath);
 

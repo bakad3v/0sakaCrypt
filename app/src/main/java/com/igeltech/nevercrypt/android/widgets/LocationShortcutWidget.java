@@ -29,7 +29,7 @@ public class LocationShortcutWidget extends AppWidgetProvider
         views.setImageViewResource(R.id.widgetLockImageButton, isContainerOpen ? R.drawable.widget_unlocked : R.drawable.widget_locked);
         Intent intent = new Intent(context, LocationManagerActivity.class);
         intent.setData(Uri.parse(prefs.locationUriString));
-        PendingIntent pendingIntent = PendingIntent.getActivity(context, widgetId, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent pendingIntent = PendingIntent.getActivity(context, widgetId, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         views.setOnClickPendingIntent(R.id.widgetLockImageButton, pendingIntent);
         appWidgetManager.updateAppWidget(widgetId, views);
     }

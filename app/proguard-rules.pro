@@ -31,4 +31,15 @@
     public void readExternal(java.io.ObjectInput);
     public void writeExternal(java.io.ObjectOutput);
 }
-
+-dontwarn javax.annotation.CheckReturnValue
+-dontwarn javax.annotation.Nonnull
+-dontwarn javax.annotation.Nullable
+-dontwarn javax.annotation.ParametersAreNonnullByDefault
+-keep class com.igeltech.nevercrypt.fs.exfat.ExFat { *; }
+-keep class com.igeltech.nevercrypt.fs.util.FileStat { *; }
+-keep class com.igeltech.nevercrypt.fs.util.Util {
+    public static int pread(com.igeltech.nevercrypt.fs.RandomAccessIO, byte[], int, int, long);
+    public static int pwrite(com.igeltech.nevercrypt.fs.RandomAccessIO, byte[], int, int, long);
+}
+-keep interface com.igeltech.nevercrypt.fs.RandomAccessIO { *; }
+-keep class com.igeltech.nevercrypt.exceptions.NativeError 

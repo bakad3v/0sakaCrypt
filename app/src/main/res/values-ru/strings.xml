@@ -18,12 +18,25 @@
     <string name="enter_new_file_name">Введите новое имя файла</string>
     <string name="settings">Настройки</string>
     <string name="bad_container_file_or_wrong_password">Неправильный пароль или испорченный файл контейнера</string>
-    <string name="app_shortcut"><xliff:g id="program_name">NeverCrypt</xliff:g> ссылка</string>
+    <string name="app_shortcut"><xliff:g id="program_name">0sakaCrypt</xliff:g> ссылка</string>
     <string name="enter_widget_title">Введите название виджета</string>
     <string name="select_path">Выбрать путь</string>
     <string name="container_size">Размер контейнера</string>
     <string name="container_size_desc">Введите размер контейнера в мегабайтах</string>
     <string name="container_password">Пароль контейнера</string>
+    <string name="save_volume_settings">Сохранить настройки тома в памяти приложения</string>
+    <string name="save_volume_settings_desc">Сохранить формат контейнера, алгоритм шифрования и алгоритм хэширования для более быстрого открытия</string>
+    <string name="create_hidden_volume">Создать скрытый том</string>
+    <string name="create_hidden_volume_desc">Создать скрытый том VeraCrypt в свободном пространстве внешнего тома</string>
+    <string name="hidden_volume_password">Пароль скрытого тома</string>
+    <string name="hidden_volume_size">Размер скрытого тома</string>
+    <string name="hidden_volume_size_desc">Введите размер скрытого тома в мегабайтах. Оставьте пустым или введите 0, чтобы использовать максимально возможный размер.</string>
+    <string name="hidden_volume_encryption_algorithm">Алгоритм шифрования скрытого тома</string>
+    <string name="hidden_volume_hash_algorithm">Алгоритм хэширования пароля скрытого тома</string>
+    <string name="hidden_volume_file_system_type">Файловая система скрытого тома</string>
+    <string name="hidden_volume_kdf_iterations_multiplier">PIM скрытого тома</string>
+    <string name="protect_hidden_volume">Защитить скрытый том от повреждения</string>
+    <string name="protect_hidden_volume_desc">Использовать пароль скрытого тома, чтобы зарезервировать его область данных при открытии внешнего тома. Пароль не сохраняется.</string>
     <string name="create_new_container">Создать новый контейнер</string>
     <string name="cancel_task_confirmation">Вы уверены, что хотите отменить задачу?</string>
     <string name="yes">Да</string>
@@ -38,7 +51,7 @@
     <string name="free_space">Свободное пространство</string>
     <string name="saving_changes">Сохранение изменений</string>
     <string name="preparing_file">Подготовка файлов</string>
-    <string name="app_service_is_running">Работает служба <xliff:g id="program_name">NeverCrypt</xliff:g></string>
+    <string name="app_service_is_running">Работает служба <xliff:g id="program_name">0sakaCrypt</xliff:g></string>
     <string name="stop_service_and_exit">Выход</string>
     <string name="send_files_to">Отправить файлы</string>
     <string name="send">Отправить</string>
@@ -50,6 +63,10 @@
     <string name="err_temp_file_is_too_big">Слишком большой размер временного файла. Вы можете скопировать файл вручную или увеличить максимальный размер временного файла в настройках программы.</string>
     <string name="err_external_storage_is_not_available">Карта памяти недоступна</string>
     <string name="err_container_size_is_too_small">Заданный размер контейнера слишком мал</string>
+    <string name="err_hidden_volume_is_not_supported">Выбранный формат контейнера не поддерживает скрытые тома</string>
+    <string name="err_hidden_volume_size_is_too_large">Размер скрытого тома слишком велик. Максимальный размер: %1$d МиБ.</string>
+    <string name="err_hidden_volume_file_system_is_too_small">Размер скрытого тома слишком мал для выбранной файловой системы</string>
+    <string name="err_hidden_volume_protection_failed">Не удалось включить защиту скрытого тома. Проверьте пароль скрытого тома.</string>
     <string name="err_failed_processing_settings_file">Не удалось обработать файл настроек</string>
     <string name="err_failed_creating_container">Не удалось создать контейнер</string>
     <string name="about">О программе</string>
@@ -78,7 +95,7 @@
     <string name="show_previews">Показывать миниатюры в менеджере файлов</string>
     <string name="open_read_only">Открыть только для чтения</string>
     <string name="disable_wide_screen_layouts">Отключить портретный режим</string>
-    <string name="close_all_containers">Закрыть все контейнеры <xliff:g id="program_name">NeverCrypt</xliff:g></string>
+    <string name="close_all_containers">Закрыть все контейнеры <xliff:g id="program_name">0sakaCrypt</xliff:g></string>
     <string name="fill_free_space_with_random_data">Заполнить свободное пространство случайными данными</string>
     <string name="ascending">По возрастанию</string>
     <string name="descending">По убыванию</string>
@@ -146,6 +163,7 @@
     <string name="disable">Отключить</string>
     <string name="copy_here">Скопировать сюда</string>
     <string name="move_here">Переместить сюда</string>
+    <string name="import_file">Импортировать файл</string>
     <string name="number_of_kdf_iterations_veracrypt_descr">Множитель количества итераций PBKDF2 (PIM). Чем больше значение, тем дольше будет открываться контейнер. Введите 0, чтобы использовать значение по умолчанию. Подробности можно узнать, пройдя по ссылке https://veracrypt.codeplex.com/wikipage?title=Personal%20Iterations%20Multiplier%20(PIM)</string>
     <string name="kdf_iterations_multiplier">Количество итераций при генерировании ключа (PIM)</string>
     <string name="container_format_is">&lt;p&gt;Формат контейнера: &lt;b&gt;%1$s&lt;/b&gt;.&lt;/p&gt;</string>
@@ -154,7 +172,7 @@
     <string name="hidden">скрытый</string>
     <string name="overwrite_and_delete">Перезаписать и удалить</string>
     <string name="list_is_empty">Список пуст</string>
-    <string name="hide_app_screen_from_other_apps">Скрыть экран <xliff:g id="program_name">NeverCrypt</xliff:g> от других приложений</string>
+    <string name="hide_app_screen_from_other_apps">Скрыть экран <xliff:g id="program_name">0sakaCrypt</xliff:g> от других приложений</string>
     <string name="toggle_auto_zoom">Вкл/вкл автоматического масштабирования</string>
     <string name="change">Изменить</string>
     <string name="do_you_really_want_to_remove_from_the_list">Вы действительно хотите убрать \"%1$s\" из списка?</string>
@@ -164,7 +182,7 @@
     <string name="use_external_file_manager">Сторонний менеджер файлов</string>
     <string name="use_external_file_manager_desc">Открывать сторонний менеджер файлов после монтирования контейнера</string>
     <string name="builtin_file_manager">Встроенный менеджер файлов</string>
-    <string name="dont_use_content_provider">Не использовать content provider <xliff:g id="program_name">NeverCrypt</xliff:g> для открытия расшифрованных файлов в сторонних приложениях.</string>
+    <string name="dont_use_content_provider">Не использовать content provider <xliff:g id="program_name">0sakaCrypt</xliff:g> для открытия расшифрованных файлов в сторонних приложениях.</string>
     <string name="dont_use_content_provider_desc">Некоторые проиложения не поддерживают работу через content provider.</string>
     <string name="uri_of_the_container">URI контейнера</string>
     <string name="text_has_been_copied">Текст был скопирован в буфер обмена</string>

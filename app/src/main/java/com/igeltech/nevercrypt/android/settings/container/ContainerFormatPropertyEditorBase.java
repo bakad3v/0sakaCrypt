@@ -1,7 +1,6 @@
 package com.igeltech.nevercrypt.android.settings.container;
 
 import com.igeltech.nevercrypt.android.R;
-import com.igeltech.nevercrypt.android.locations.fragments.CreateContainerFragment;
 import com.igeltech.nevercrypt.android.locations.fragments.CreateContainerFragmentBase;
 import com.igeltech.nevercrypt.android.locations.fragments.CreateLocationFragment;
 import com.igeltech.nevercrypt.android.locations.tasks.CreateContainerTaskFragmentBase;
@@ -71,6 +70,7 @@ public abstract class ContainerFormatPropertyEditorBase extends ChoiceDialogProp
                 ContainerFormatInfo cfi = getSelectedContainerFormatInfo(value);
                 if (cfi != null)
                     getHostFragment().getState().putString(CreateContainerTaskFragmentBase.ARG_CONTAINER_FORMAT, cfi.getFormatName());
+                getHostFragment().applyDefaultFillFreeSpaceForCurrentFormat();
                 updateEncFsProperties(false);
                 updateContainerFormatProperties(!addExisting, cfi);
             }
@@ -90,7 +90,7 @@ public abstract class ContainerFormatPropertyEditorBase extends ChoiceDialogProp
 
     protected CreateContainerFragmentBase getHostFragment()
     {
-        return (CreateContainerFragment) getHost();
+        return (CreateContainerFragmentBase) getHost();
     }
 
     protected int getFormatIdFromName(String formatName)
@@ -124,6 +124,9 @@ public abstract class ContainerFormatPropertyEditorBase extends ChoiceDialogProp
         pm.setPropertyState(R.string.hash_algorithm, enable);
         pm.setPropertyState(R.string.fill_free_space_with_random_data, enable);
         pm.setPropertyState(R.string.file_system_type, enable);
+        pm.setPropertyState(R.string.save_volume_settings, enable);
+        pm.setPropertyState(R.string.create_hidden_volume, enable && cfi != null && cfi.hasHiddenContainerSupport());
+        getHostFragment().changeHiddenVolumeDependentOptions();
     }
 
     private void updateEncFsProperties(boolean enable)

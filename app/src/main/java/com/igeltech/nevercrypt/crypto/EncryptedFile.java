@@ -31,7 +31,7 @@ public class EncryptedFile extends TransRandomAccessIO
         _transBuffer = new byte[_bufferSize];
         try
         {
-            _length = calcVirtPosition(base.length());
+            _length = layout.getEncryptedDataSize(base.length());
         }
         catch (IOException ignored)
         {

@@ -37,7 +37,7 @@ public class CreateEncFsTaskFragment extends CreateLocationTaskFragment
         super.initFormatter(state, formatter, password);
         Bundle args = getArguments();
         EncFsFormatter cf = (EncFsFormatter) formatter;
-        cf.setDataCodecName(args.getString(ARG_CIPHER_NAME));
+        cf.setDataCodecName(args.getString(Openable.PARAM_CIPHER_NAME));
         cf.setNameCodecName(args.getString(ARG_NAME_CIPHER_NAME));
         Config c = cf.getConfig();
         c.setKeySize(args.getInt(ARG_KEY_SIZE));

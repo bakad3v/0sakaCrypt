@@ -7,7 +7,7 @@ import com.igeltech.nevercrypt.fs.util.SrcDstCollection.SrcDst;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Random;
+import java.security.SecureRandom;
 
 public class WipeFilesTask
 {
@@ -25,7 +25,7 @@ public class WipeFilesTask
 
     public static void wipeFileRnd(File file, ITask task) throws IOException
     {
-        Random rg = new Random();
+        SecureRandom rg = new SecureRandom();
         try
         {
             byte[] buf = new byte[4 * 1024];

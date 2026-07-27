@@ -19,30 +19,36 @@
         android:orderInCategory="11"
         android:title="@string/move_here"
         app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/import_file"
+        android:icon="@drawable/ic_menu_import"
+        android:orderInCategory="12"
+        android:title="@string/import_file"
+        app:showAsAction="always" />
     <group android:id="@+id/new_file_group">
         <item
             android:id="@+id/new_file"
             android:icon="@drawable/ic_menu_new_file"
-            android:orderInCategory="12"
+            android:orderInCategory="13"
             android:title="@string/new_file"
             app:showAsAction="ifRoom" />
         <item
             android:id="@+id/new_dir"
             android:icon="@drawable/ic_menu_new_folder"
-            android:orderInCategory="13"
+            android:orderInCategory="14"
             android:title="@string/new_dir"
             app:showAsAction="ifRoom" />
     </group>
     <item
         android:id="@+id/select_all"
         android:icon="@drawable/ic_menu_select_all"
-        android:orderInCategory="14"
+        android:orderInCategory="15"
         android:title="@string/select_all"
         app:showAsAction="ifRoom" />
     <item
         android:id="@+id/sort"
         android:icon="@drawable/ic_menu_sort"
-        android:orderInCategory="15"
+        android:orderInCategory="16"
         android:title="@string/sort"
         app:showAsAction="ifRoom" />
 </menu>

@@ -36,7 +36,7 @@ public abstract class ContainerBase implements Closeable
     protected VolumeLayout _layout;
     protected ContainerFormatInfo _containerFormat;
     protected ContainerOpeningProgressReporter _progressReporter;
-    protected FileEncryptionEngine _encryptionEngine;
+    protected String _encryptionEngineHintCipherName, _encryptionEngineHintModeName;
     protected MessageDigest _messageDigest;
 
     public ContainerBase(Path path, ContainerFormatInfo containerFormat, VolumeLayout layout)
@@ -92,12 +92,31 @@ public abstract class ContainerBase implements Closeable
         {
             if (_containerFormat == null)
             {
-                if (tryLayout(t, password, false) || tryLayout(t, password, true))
+                if (tryLayoutsByHash(t, password))
                     return;
             }
             else
             {
-                if (tryLayout(_containerFormat, t, password, false) || tryLayout(_containerFormat, t, password, true))
+                if (tryLayoutByHash(_containerFormat, t, password))
+                    return;
+            }
+        }
+        throw new WrongFileFormatException();
+    }
+
+    public synchronized void open(byte[] password, boolean isHidden) throws IOException, ApplicationException
+    {
+        Logger.debug("Opening container at " + _pathToContainer.getPathString());
+        try (RandomAccessIO t = openFile())
+        {
+            if (_containerFormat == null)
+            {
+                if (tryLayout(t, password, isHidden))
+                    return;
+            }
+            else
+            {
+                if (tryLayout(_containerFormat, t, password, isHidden))
                     return;
             }
         }
@@ -114,7 +133,14 @@ public abstract class ContainerBase implements Closeable
         if (_layout == null)
             throw new IOException("The container is closed");
         EncryptionEngine enc = _layout.getEngine();
-        return allowLocalXTS() ? new LocalEncryptedFileXTS(_pathToContainer.getPathString(), isReadOnly, _layout.getEncryptedDataOffset(), (XTS) enc) : new EncryptedFileWithCache(_pathToContainer, isReadOnly ? AccessMode.Read : AccessMode.ReadWrite, _layout);
+        return allowLocalXTS()
+                ? new LocalEncryptedFileXTS(
+                _pathToContainer.getPathString(),
+                isReadOnly,
+                _layout.getEncryptedDataOffset(),
+                _layout.getEncryptedDataSize(_pathToContainer.getFile().getSize()),
+                (XTS) enc)
+                : new EncryptedFileWithCache(_pathToContainer, isReadOnly ? AccessMode.Read : AccessMode.ReadWrite, _layout);
     }
 
     public synchronized FileSystem getEncryptedFS(boolean isReadOnly) throws IOException, UserException
@@ -168,7 +194,17 @@ public abstract class ContainerBase implements Closeable
 
     public void setEncryptionEngineHint(FileEncryptionEngine eng)
     {
-        _encryptionEngine = eng;
+        _encryptionEngineHintCipherName = eng == null ? null : eng.getCipherName();
+        _encryptionEngineHintModeName = eng == null ? null : eng.getCipherModeName();
+    }
+
+    /**
+     * Stores a cipher/mode hint by name so the concrete layout can resolve its own engine instance.
+     */
+    public void setEncryptionEngineHint(String cipherName, String modeName)
+    {
+        _encryptionEngineHintCipherName = cipherName;
+        _encryptionEngineHintModeName = modeName;
     }
 
     public void setHashFuncHint(MessageDigest hf)
@@ -218,6 +254,16 @@ public abstract class ContainerBase implements Closeable
 
     protected boolean tryLayout(ContainerFormatInfo cf, RandomAccessIO containerFile, byte[] password, boolean isHidden) throws IOException, ApplicationException
     {
+        return tryLayoutByHash(cf, containerFile, password, isHidden);
+    }
+
+    protected boolean tryLayout(ContainerFormatInfo cf, RandomAccessIO containerFile, byte[] password, boolean isHidden, MessageDigest hashFunc) throws IOException, ApplicationException
+    {
+        return tryLayout(cf, containerFile, password, isHidden, hashFunc, hasEncryptionEngineHint());
+    }
+
+    protected boolean tryLayout(ContainerFormatInfo cf, RandomAccessIO containerFile, byte[] password, boolean isHidden, MessageDigest hashFunc, boolean useEncryptionEngineHint) throws IOException, ApplicationException
+    {
         if (isHidden && !cf.hasHiddenContainerSupport())
             return false;
         Logger.debug(String.format("Trying %s container format%s", cf.getFormatName(), isHidden ? " (hidden)" : ""));
@@ -227,11 +273,18 @@ public abstract class ContainerBase implements Closeable
             _progressReporter.setIsHidden(isHidden);
         }
         VolumeLayout vl = isHidden ? cf.getHiddenVolumeLayout() : cf.getVolumeLayout();
+        // Skip formats whose layout cannot use the selected one-shot KDF/hash hint.
+        if (hashFunc != null && !isHashFuncSupported(vl, hashFunc))
+            return false;
         vl.setOpeningProgressReporter(_progressReporter);
-        if (_encryptionEngine != null)
-            vl.setEngine(_encryptionEngine);
-        if (_messageDigest != null)
-            vl.setHashFunc(_messageDigest);
+        FileEncryptionEngine encryptionEngineHint = useEncryptionEngineHint ? getEncryptionEngineHint(vl) : null;
+        // A selected cipher hint must match the current layout; otherwise this attempt is invalid.
+        if (useEncryptionEngineHint && encryptionEngineHint == null)
+            return false;
+        if (encryptionEngineHint != null)
+            vl.setEngine(encryptionEngineHint);
+        if (hashFunc != null)
+            vl.setHashFunc(hashFunc);
         vl.setPassword(cutPassword(password, cf.getMaxPasswordLength()));
         if (cf.hasCustomKDFIterationsSupport() && _numKDFIterations > 0)
             vl.setNumKDFIterations(_numKDFIterations);
@@ -241,19 +294,96 @@ public abstract class ContainerBase implements Closeable
             _layout = vl;
             return true;
         }
-        else if (isHidden && (_encryptionEngine != null || _messageDigest != null))
-        {
-            vl.setEngine(null);
-            vl.setHashFunc(null);
-            if (vl.readHeader(containerFile))
-            {
-                _containerFormat = cf;
-                _layout = vl;
-                return true;
-            }
-        }
         vl.close();
         return false;
+    }
+
+    protected boolean tryLayoutsByHash(RandomAccessIO containerFile, byte[] password) throws IOException, ApplicationException
+    {
+        List<ContainerFormatInfo> cfs = getFormats();
+        if (cfs.size() > 1)
+            Collections.sort(cfs, (lhs, rhs) -> Integer.compare(lhs.getOpeningPriority(), rhs.getOpeningPriority()));
+        for (ContainerFormatInfo cf : cfs)
+        {
+            //Don't try too slow container formats
+            if (cf.getOpeningPriority() < 0)
+                continue;
+            if (tryLayoutByHash(cf, containerFile, password))
+                return true;
+        }
+        return false;
+    }
+
+    protected boolean tryLayoutByHash(ContainerFormatInfo cf, RandomAccessIO containerFile, byte[] password) throws IOException, ApplicationException
+    {
+        if (_messageDigest != null)
+        {
+            if (tryLayoutByHash(cf, containerFile, password, _messageDigest))
+                return true;
+        }
+        VolumeLayout vl = cf.getVolumeLayout();
+        for (MessageDigest hashFunc : vl.getSupportedHashFuncs())
+            if (!isSameHashFunc(hashFunc, _messageDigest) && tryLayoutByHash(cf, containerFile, password, hashFunc))
+                return true;
+        return false;
+    }
+
+    protected boolean tryLayoutByHash(ContainerFormatInfo cf, RandomAccessIO containerFile, byte[] password, boolean isHidden) throws IOException, ApplicationException
+    {
+        if (_messageDigest != null)
+        {
+            if (tryLayoutByHash(cf, containerFile, password, isHidden, _messageDigest))
+                return true;
+        }
+        // Hidden-header probes should auto-detect against the hidden layout, not the outer one.
+        VolumeLayout vl = isHidden ? cf.getHiddenVolumeLayout() : cf.getVolumeLayout();
+        if (vl == null)
+            return false;
+        for (MessageDigest hashFunc : vl.getSupportedHashFuncs())
+            if (!isSameHashFunc(hashFunc, _messageDigest) && tryLayoutByHash(cf, containerFile, password, isHidden, hashFunc))
+                return true;
+        return false;
+    }
+
+    protected boolean tryLayoutByHash(ContainerFormatInfo cf, RandomAccessIO containerFile, byte[] password, MessageDigest hashFunc) throws IOException, ApplicationException
+    {
+        if (hasEncryptionEngineHint() && tryLayout(cf, containerFile, password, false, hashFunc, true))
+            return true;
+        if (tryLayout(cf, containerFile, password, false, hashFunc, false))
+            return true;
+        if (hasEncryptionEngineHint() && tryLayout(cf, containerFile, password, true, hashFunc, true))
+            return true;
+        return tryLayout(cf, containerFile, password, true, hashFunc, false);
+    }
+
+    protected boolean tryLayoutByHash(ContainerFormatInfo cf, RandomAccessIO containerFile, byte[] password, boolean isHidden, MessageDigest hashFunc) throws IOException, ApplicationException
+    {
+        if (hasEncryptionEngineHint() && tryLayout(cf, containerFile, password, isHidden, hashFunc, true))
+            return true;
+        return tryLayout(cf, containerFile, password, isHidden, hashFunc, false);
+    }
+
+    protected boolean hasEncryptionEngineHint()
+    {
+        return _encryptionEngineHintCipherName != null && _encryptionEngineHintModeName != null;
+    }
+
+    protected FileEncryptionEngine getEncryptionEngineHint(VolumeLayout layout)
+    {
+        return hasEncryptionEngineHint() ? (FileEncryptionEngine) VolumeLayoutBase.findCipher(layout.getSupportedEncryptionEngines(), _encryptionEngineHintCipherName, _encryptionEngineHintModeName) : null;
+    }
+
+    protected boolean isSameHashFunc(MessageDigest lhs, MessageDigest rhs)
+    {
+        return lhs != null && rhs != null && lhs.getAlgorithm().equalsIgnoreCase(rhs.getAlgorithm());
+    }
+
+    /**
+     * Checks whether a layout advertises support for the selected KDF/hash hint.
+     */
+    protected boolean isHashFuncSupported(VolumeLayout layout, MessageDigest hashFunc)
+    {
+       return VolumeLayoutBase.findHashFunc(layout.getSupportedHashFuncs(), hashFunc.getAlgorithm()) != null;
     }
 
     protected Iterable<VolumeLayout> getLayouts(boolean isHidden)
@@ -273,6 +403,3 @@ public abstract class ContainerBase implements Closeable
         return _pathToContainer instanceof StdFsPath && _layout.getEngine() instanceof XTS && _pathToContainer.getFileSystem() instanceof StdFs && ((StdFs) _pathToContainer.getFileSystem()).getRootDir().isEmpty();
     }
 }
-
-
-

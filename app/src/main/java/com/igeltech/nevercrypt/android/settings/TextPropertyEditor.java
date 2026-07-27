@@ -33,6 +33,8 @@ public abstract class TextPropertyEditor extends PropertyEditorBase implements T
     {
         View view = super.createView(parent);
         _selectedValueTextView = view.findViewById(android.R.id.text1);
+        // Dynamic properties can be enabled before loadProperties() reaches them; avoid saving XML placeholders.
+        _selectedValueTextView.setText(loadText());
         AppCompatButton selectButton = view.findViewById(android.R.id.button1);
         selectButton.setOnClickListener(view1 -> startChangeValueDialog());
         return view;

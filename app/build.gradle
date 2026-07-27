@@ -1,17 +1,18 @@
 plugins {
     id 'com.android.application'
     id 'androidx.navigation.safeargs' apply(true)
+    id 'org.jetbrains.kotlin.android'
 }
 
 android {
-    compileSdkVersion 33
+    compileSdkVersion 37
 
     defaultConfig {
-        applicationId 'com.igeltech.nevercrypt'
-        minSdkVersion 21
-        targetSdkVersion 33
-        versionCode 1
-        versionName "1.0"
+        applicationId 'com.bakad3v.osakacrypt'
+        minSdkVersion 23
+        targetSdkVersion 37
+        versionCode 2
+        versionName "1.0.0-alpha"
 
         ndk {
             // Specifies the ABI configurations of your native
@@ -22,7 +23,7 @@ android {
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
 
         proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-
+        android.buildFeatures.buildConfig = true
         externalNativeBuild {
             cmake {
                 targets "cryptxts", "cryptctr", "cryptaes", "cryptserpent", "crypttwofish", "cryptripemd160", "cryptwhirlpool", "fdraio", "localxts", "cryptcfb", "cryptcbc", "cryptctr", "cryptgost",
@@ -34,6 +35,7 @@ android {
     buildTypes {
         release {
             minifyEnabled true
+            shrinkResources = true
         }
         debug {
             externalNativeBuild {
@@ -69,20 +71,25 @@ android {
         sourceCompatibility JavaVersion.VERSION_11
         targetCompatibility JavaVersion.VERSION_11
     }
+    kotlinOptions {
+        jvmTarget = '11'
+    }
+    namespace 'com.igeltech.nevercrypt.android'
 }
 
 dependencies {
-    implementation 'com.google.android.material:material:1.7.0'
+    implementation 'com.google.android.material:material:1.14.0'
     implementation 'androidx.exifinterface:exifinterface:1.3.5'
     implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.1.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation 'androidx.navigation:navigation-fragment:2.5.3'
     implementation 'androidx.navigation:navigation-ui:2.5.3'
-
+    implementation 'org.signal:argon2:13.1@aar'
     implementation 'com.drewnoakes:metadata-extractor:2.15.0'
     implementation 'io.reactivex.rxjava3:rxandroid:3.0.0'
     implementation 'io.reactivex.rxjava3:rxjava:3.0.7'
     implementation 'com.trello.rxlifecycle3:rxlifecycle:3.1.0'
     implementation 'com.trello.rxlifecycle3:rxlifecycle-android:3.1.0'
     implementation 'com.trello.rxlifecycle3:rxlifecycle-components:3.1.0'
+    implementation 'androidx.core:core-ktx:1.19.0'
 }

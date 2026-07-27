@@ -3,6 +3,7 @@ package com.igeltech.nevercrypt.android.filemanager.fragments;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -12,6 +13,7 @@ import android.view.ViewGroup;
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
@@ -24,6 +26,7 @@ import com.igeltech.nevercrypt.android.filemanager.records.BrowserRecord;
 import com.igeltech.nevercrypt.android.fragments.TaskFragment;
 import com.igeltech.nevercrypt.android.helpers.CachedPathInfo;
 import com.igeltech.nevercrypt.android.helpers.ProgressDialogTaskFragmentCallbacks;
+import com.igeltech.nevercrypt.android.service.FileOpsService;
 import com.igeltech.nevercrypt.android.settings.UserSettings;
 import com.igeltech.nevercrypt.fs.Path;
 import com.igeltech.nevercrypt.fs.util.SrcDstCollection;
@@ -49,6 +52,7 @@ public class FileManagerFragment extends RxFragment implements PreviewFragment.H
     protected boolean _isLargeScreenLayout;
     FileManagerFragmentArgs _args;
     Location _currentLocation;
+    private boolean _updatePathReceiverRegistered;
 
     public static Intent getOverwriteRequestIntent(Context context, boolean move, SrcDstCollection records)
     {
@@ -97,6 +101,8 @@ public class FileManagerFragment extends RxFragment implements PreviewFragment.H
 
     public void rereadCurrentLocation()
     {
+        if (!isAdded())
+            return;
         FileListViewFragment f = getFileListViewFragment();
         if (f != null)
             f.rereadCurrentLocation();
@@ -124,6 +130,11 @@ public class FileManagerFragment extends RxFragment implements PreviewFragment.H
     public Location getLocation()
     {
         return _currentLocation;
+    }
+
+    void setLocation(Location location)
+    {
+        _currentLocation = location;
     }
 
     public boolean hasSelectedFiles()
@@ -198,6 +209,20 @@ public class FileManagerFragment extends RxFragment implements PreviewFragment.H
         requireActivity().getOnBackPressedDispatcher().addCallback(this, callback);
     }
 
+    @Override
+    public void onStart()
+    {
+        super.onStart();
+        registerUpdatePathReceiver();
+    }
+
+    @Override
+    public void onStop()
+    {
+        unregisterUpdatePathReceiver();
+        super.onStop();
+    }
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState)
@@ -226,14 +251,42 @@ public class FileManagerFragment extends RxFragment implements PreviewFragment.H
 
     public FileListDataFragment getFileListDataFragment()
     {
+        if (!isAdded())
+            return null;
         FileListDataFragment f = (FileListDataFragment) getChildFragmentManager().findFragmentByTag(FileListDataFragment.TAG);
         return f != null && f.isAdded() ? f : null;
     }
 
     public FileListViewFragment getFileListViewFragment()
     {
+        if (!isAdded())
+            return null;
         FileListViewFragment f = (FileListViewFragment) getChildFragmentManager().findFragmentByTag(FileListViewFragment.TAG);
         return f != null && f.isAdded() ? f : null;
+    }
+
+    /**
+     * Subscribes the visible file manager to internal file-operation updates.
+     * The receiver must follow the fragment lifecycle because it touches child fragments.
+     */
+    private void registerUpdatePathReceiver()
+    {
+        if (_updatePathReceiverRegistered)
+            return;
+        ContextCompat.registerReceiver(requireContext(), _updatePathReceiver, new IntentFilter(FileOpsService.BROADCAST_FILE_OPERATION_COMPLETED), ContextCompat.RECEIVER_NOT_EXPORTED);
+        _updatePathReceiverRegistered = true;
+    }
+
+    /**
+     * Removes the file-operation update receiver before the fragment becomes detached.
+     * This prevents completed background tasks from refreshing a fragment with no host.
+     */
+    private void unregisterUpdatePathReceiver()
+    {
+        if (!_updatePathReceiverRegistered)
+            return;
+        requireContext().unregisterReceiver(_updatePathReceiver);
+        _updatePathReceiverRegistered = false;
     }
 
     protected void showSecondaryFragment(Fragment f, String tag)
@@ -332,4 +385,3 @@ public class FileManagerFragment extends RxFragment implements PreviewFragment.H
         };
     }
 }
-

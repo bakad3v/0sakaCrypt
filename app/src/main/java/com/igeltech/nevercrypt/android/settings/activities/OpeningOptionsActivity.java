@@ -1,7 +1,9 @@
 package com.igeltech.nevercrypt.android.settings.activities;
 
 import android.content.Intent;
+import android.os.Bundle;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.fragment.app.Fragment;
 
 import com.igeltech.nevercrypt.android.Logger;
@@ -11,27 +13,54 @@ import com.igeltech.nevercrypt.android.settings.fragments.OpeningOptionsFragment
 
 public class OpeningOptionsActivity extends SettingsBaseActivity
 {
+
     @Override
-    public void onBackPressed()
+    public void onCreate(Bundle savedInstanceState)
     {
-        PropertiesHostWithStateBundle frag = (PropertiesHostWithStateBundle) getFragmentManager().findFragmentByTag(SETTINGS_FRAGMENT_TAG);
-        if (frag != null)
+        super.onCreate(savedInstanceState);
+
+            getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true)
+            {
+                @Override
+                public void handleOnBackPressed()
+                {
+                    finishAfterSavingResult();
+                }
+            });
+    }
+
+    @Override
+    public boolean onSupportNavigateUp()
+    {
+        if (!finishWithResult())
+            return false;
+        return super.onSupportNavigateUp();
+    }
+
+    private void finishAfterSavingResult()
+    {
+        if (finishWithResult())
+            finish();
+    }
+
+    private boolean finishWithResult()
+    {
+        PropertiesHostWithStateBundle frag = (PropertiesHostWithStateBundle) getSupportFragmentManager().findFragmentByTag(SETTINGS_FRAGMENT_TAG);
+        if (frag == null)
+            return true;
+        try
         {
-            try
-            {
-                frag.getPropertiesView().saveProperties();
-                Intent res = new Intent();
-                res.putExtras(frag.getState());
-                setResult(RESULT_OK, res);
-                super.onBackPressed();
-            }
-            catch (Exception e)
-            {
-                Logger.showAndLog(this, e);
-            }
+            frag.getPropertiesView().saveProperties();
+            Intent res = new Intent();
+            res.putExtras(frag.getState());
+            setResult(RESULT_OK, res);
+            return true;
         }
-        else
-            super.onBackPressed();
+        catch (Exception e)
+        {
+            Logger.showAndLog(this, e);
+            return false;
+        }
     }
 
     @Override

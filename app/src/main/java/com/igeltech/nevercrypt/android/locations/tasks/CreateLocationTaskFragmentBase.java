@@ -24,7 +24,6 @@ public abstract class CreateLocationTaskFragmentBase extends com.igeltech.neverc
 {
     public static final String TAG = "com.igeltech.nevercrypt.android.locations.tasks.CreateEDSLocationTaskFragment";
     public static final String ARG_LOCATION = "com.igeltech.nevercrypt.android.LOCATION";
-    public static final String ARG_CIPHER_NAME = "com.igeltech.nevercrypt.android.CIPHER_NAME";
     public static final String ARG_OVERWRITE = "com.igeltech.nevercrypt.android.OVERWRITE";
     public static final int RESULT_REQUEST_OVERWRITE = 1;
     protected Context _context;

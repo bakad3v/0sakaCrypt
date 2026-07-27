@@ -158,9 +158,16 @@ int exfat_flush(struct exfat* ef)
 {
 	if (ef->cmap.dirty)
 	{
-		if (exfat_pwrite(ef->dev, ef->cmap.chunk,
-				BMAP_SIZE(ef->cmap.chunk_size),
-				exfat_c2o(ef, ef->cmap.start_cluster)) < 0)
+		size_t bitmap_size = BMAP_SIZE(exfat_effective_cluster_count(ef));
+		off64_t bitmap_offset = exfat_c2o(ef, ef->cmap.start_cluster);
+
+		/* Flush only the protected bitmap prefix and never write past the byte cap. */
+		if (!exfat_range_inside_volume_limit(ef, bitmap_offset, bitmap_size))
+		{
+			exfat_error("no free space left while flushing protected bitmap");
+			return -ENOSPC;
+		}
+		if (exfat_pwrite(ef->dev, ef->cmap.chunk, bitmap_size, bitmap_offset) < 0)
 		{
 			exfat_error("failed to write clusters bitmap");
 			return -EIO;
@@ -182,6 +189,12 @@ static bool set_next_cluster(const struct exfat* ef, bool contiguous,
 	fat_offset = s2o(ef, le32_to_cpu(ef->sb->fat_sector_start))
 		+ current * sizeof(cluster_t);
 	next_le32 = cpu_to_le32(next);
+	/* FAT-chain updates are metadata writes, but still refuse impossible protected ranges. */
+	if (!exfat_range_inside_volume_limit(ef, fat_offset, sizeof(next_le32)))
+	{
+		exfat_error("no free space left while writing protected FAT chain");
+		return false;
+	}
 	if (exfat_pwrite(ef->dev, &next_le32, sizeof(next_le32), fat_offset) < 0)
 	{
 		exfat_error("failed to write the next cluster %#x after %#x", next,
@@ -194,12 +207,14 @@ static bool set_next_cluster(const struct exfat* ef, bool contiguous,
 static cluster_t allocate_cluster(struct exfat* ef, cluster_t hint)
 {
 	cluster_t cluster;
+	/* Hidden-volume protection makes clusters past this count invisible to allocation. */
+	const uint32_t cluster_count = exfat_effective_cluster_count(ef);
 
 	hint -= EXFAT_FIRST_DATA_CLUSTER;
-	if (hint >= ef->cmap.chunk_size)
+	if (hint >= cluster_count)
 		hint = 0;
 
-	cluster = find_bit_and_set(ef->cmap.chunk, hint, ef->cmap.chunk_size);
+	cluster = find_bit_and_set(ef->cmap.chunk, hint, cluster_count);
 	if (cluster == EXFAT_CLUSTER_END)
 		cluster = find_bit_and_set(ef->cmap.chunk, 0, hint);
 	if (cluster == EXFAT_CLUSTER_END)
@@ -280,7 +295,8 @@ static int grow_file(struct exfat* ef, struct exfat_node* node,
 				shrink_file(ef, node, current + allocated, allocated);
 			return -ENOSPC;
 		}
-		if (next != previous - 1 && node->is_contiguous)
+		/* Cluster numbers increase forward in a contiguous chain. */
+		if (next != previous + 1 && node->is_contiguous)
 		{
 			/* it's a pity, but we are not able to keep the file contiguous
 			   anymore */
@@ -360,6 +376,12 @@ static int shrink_file(struct exfat* ef, struct exfat_node* node,
 
 static bool erase_raw(struct exfat* ef, size_t size, off64_t offset)
 {
+	/* Refuse metadata/data erases that would cross into the protected hidden area. */
+	if (!exfat_range_inside_volume_limit(ef, offset, size))
+	{
+		exfat_error("no free space left while erasing protected range");
+		return false;
+	}
 	if (exfat_pwrite(ef->dev, ef->zero_cluster, size, offset) < 0)
 	{
 		exfat_error("failed to erase %zu bytes at %"PRId64, size, offset);
@@ -441,8 +463,10 @@ uint32_t exfat_count_free_clusters(const struct exfat* ef)
 {
 	uint32_t free_clusters = 0;
 	uint32_t i;
+	/* Free-space accounting follows the same protected view as allocation. */
+	const uint32_t cluster_count = exfat_effective_cluster_count(ef);
 
-	for (i = 0; i < ef->cmap.size; i++)
+	for (i = 0; i < cluster_count; i++)
 		if (BMAP_GET(ef->cmap.chunk, i) == 0)
 			free_clusters++;
 	return free_clusters;
@@ -451,7 +475,8 @@ uint32_t exfat_count_free_clusters(const struct exfat* ef)
 static int find_used_clusters(const struct exfat* ef,
 		cluster_t* a, cluster_t* b)
 {
-	const cluster_t end = le32_to_cpu(ef->sb->cluster_count);
+	/* Defragmentation/free-space wiping must not inspect clusters beyond the protected view. */
+	const cluster_t end = exfat_effective_cluster_count(ef);
 
 	/* find first used cluster */
 	for (*a = *b + 1; *a < end; (*a)++)

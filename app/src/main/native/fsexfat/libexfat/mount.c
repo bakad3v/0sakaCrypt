@@ -144,6 +144,12 @@ static bool verify_vbr_checksum(struct exfat_dev* dev, void* sector,
 
 static int commit_super_block(const struct exfat* ef)
 {
+	/* The superblock is normally before the protected data area; guard it for malformed layouts. */
+	if (!exfat_range_inside_volume_limit(ef, 0, sizeof(struct exfat_super_block)))
+	{
+		exfat_error("no free space left while writing protected super block");
+		return 1;
+	}
 	if (exfat_pwrite(ef->dev, ef->sb, sizeof(struct exfat_super_block), 0) < 0)
 	{
 		exfat_error("failed to write super block");
@@ -191,7 +197,8 @@ static void finalize_super_block(struct exfat* ef)
 
 	/* Some implementations set the percentage of allocated space to 0xff
 	   on FS creation and never update it. In this case leave it as is. */
-	if (ef->sb->allocated_percent != 0xff)
+	/* Protected mounts keep on-disk allocation metadata untouched to avoid leaking the capped view. */
+	if (ef->volume_size_limit == 0 && ef->sb->allocated_percent != 0xff)
 	{
 		uint32_t free, total;
 

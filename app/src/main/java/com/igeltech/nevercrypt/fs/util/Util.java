@@ -27,6 +27,7 @@ import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 
 import io.reactivex.functions.Cancellable;
@@ -81,14 +82,17 @@ public class Util
         }
         else
             output = file.getOutputStream();
+        long copied;
         try
         {
-            return copyStream(input, output, count, pi);
+            copied = copyStream(input, output, count, pi);
         }
         finally
         {
             output.close();
         }
+        file.setLastModified(new Date());
+        return copied;
     }
 
     public static long copyStream(InputStream src, OutputStream dst, long count, com.igeltech.nevercrypt.fs.File.ProgressInfo pi) throws IOException

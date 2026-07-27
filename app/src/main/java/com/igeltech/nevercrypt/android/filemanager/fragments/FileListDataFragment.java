@@ -295,7 +295,7 @@ public class FileListDataFragment extends RxFragment
         Logger.debug(TAG + " readCurrentLocation");
         cancelReadDirTask();
         clearCurrentFiles();
-        _location = location;
+        setCurrentLocation(location);
         if (_location == null)
             return;
         FileManagerActivity activity = (FileManagerActivity) getActivity();
@@ -336,6 +336,7 @@ public class FileListDataFragment extends RxFragment
                 }).
                 observeOn(AndroidSchedulers.mainThread()).
                 doOnSuccess(loadLocationInfo -> {
+                    setCurrentLocation(loadLocationInfo.location);
                     Logger.debug(TAG + ": _locationLoading.onNext loading");
                     _locationLoading.onNext(loadLocationInfo);
                 }).
@@ -512,6 +513,14 @@ public class FileListDataFragment extends RxFragment
             _fileList.clear();
         }
         _location = null;
+    }
+
+    private void setCurrentLocation(Location location)
+    {
+        _location = location;
+        FileManagerFragment parent = (FileManagerFragment) getParentFragment();
+        if (parent != null)
+            parent.setLocation(location);
     }
 
     private void restoreState(Bundle state)

@@ -194,6 +194,12 @@ ssize_t exfat_generic_pwrite(struct exfat* ef, struct exfat_node* node,
 			return -EIO;
 		}
 		lsize = MIN(CLUSTER_SIZE(*ef->sb) - loffset, remainder);
+		/* ENOSPC protects hidden volume bytes even when a caller already holds a cluster reference. */
+		if (!exfat_range_inside_volume_limit(ef, exfat_c2o(ef, cluster) + loffset, lsize))
+		{
+			exfat_error("no free space left while writing protected range");
+			return -ENOSPC;
+		}
 		if (exfat_pwrite(ef->dev, bufp, lsize,
 				exfat_c2o(ef, cluster) + loffset) < 0)
 		{

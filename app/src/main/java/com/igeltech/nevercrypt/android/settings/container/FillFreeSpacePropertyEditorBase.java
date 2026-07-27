@@ -33,6 +33,13 @@ public abstract class FillFreeSpacePropertyEditorBase extends SwitchPropertyEdit
     }
 
     @Override
+    protected boolean onChecked(boolean isChecked)
+    {
+        getHostFragment().getState().putBoolean(CreateContainerTaskFragmentBase.ARG_FILL_FREE_SPACE_USER_SET, true);
+        return super.onChecked(isChecked);
+    }
+
+    @Override
     protected boolean loadValue()
     {
         _titleTextView.setText(R.string.fill_free_space_with_random_data);
