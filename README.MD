@@ -10,8 +10,6 @@ You can read my statement on the upcoming sideloading ban and learn some ways to
 0sakaCrypt is a virtual disk encryption software for Android which allows you to store your files in an encrypted container. It is a fork of [NeverCrypt](https://github.com/cobol56/nevercrypt), and NeverCrypt is a fork of EDS Lite, the open source edition of EDS. Visit the [EDS web site](https://sovworks.com/eds/) to learn about EDS features and capabilities.
 
 ## Features and limitation
-It's better to use this application with [GrapheneOS](https://grapheneos.org/)!
-
 Unlike NeverCrypt and EDS Lite, 0sakaCrypt focuses on working with VeraCrypt hidden volumes. It supports creating and opening hidden volumes, as well as protecting hidden volumes from accidental damage when data is written to the outer volume.
 
 Like NeverCrypt, 0sakaCrypt uses the Android Storage Access Framework to provide external applications with access to files stored inside encrypted containers.
@@ -31,6 +29,8 @@ The most important fundamental limitation of plausible deniability is that your 
 Make sure that the data in the decoy volume appears valuable enough to justify encryption. Avoid making the hidden volume unnecessarily large, and be prepared to explain why you chose to store the decoy data in an encrypted container.
 
 ## Usage recommendations
+It's better to use this application with [GrapheneOS](https://grapheneos.org/)!
+
 The application's interface and capabilities are similar to those of VeraCrypt. You can visit the [VeraCrypt website](https://veracrypt.io) to find out more about operations with VeraCrypt containers.
 
 When you open a hidden volume and edit its files using external applications, those applications may store metadata that reveals the existence or contents of files from the hidden volume. To reduce this risk, I recommend opening encrypted containers inside temporary work profiles. Work profiles are essentially separate Android users whose data is protected with a separate encryption key. After a work profile is deleted, its encrypted data can generally be made inaccessible quickly because the corresponding encryption keys are destroyed.
