@@ -5,6 +5,8 @@
 0sakaCrypt - это Android-приложение для шифрования, позволяющее хранить ваши данные внутри зашифрованного контейнера. Это форк [NeverCrypt](https://github.com/cobol56/nevercrypt), а NeverCrypt - это форк EDS Lite, open source версии [EDS](https://sovworks.com/eds/).
 
 ## Возможности и ограничения
+Если вам нужна безопасность, используйте это приложение с [GrapheneOS](https://grapheneos.org/)!
+
 В отличие от NeverCrypt и EDS Lite, 0sakaCrypt заточен на работу со скрытыми томами VeraCrypt. Программа поддерживает создание и открытие скрытых томов, а также защиту скрытых томов от повреждений при записи данных во внешний том.
 
 Как и NeverCrypt, 0sakaCrypt использует Android Storage Access Framework для предоставления внешним приложениям доступа к файлам внутри контейнера.
