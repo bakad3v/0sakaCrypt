@@ -10,6 +10,8 @@ You can read my statement on the upcoming sideloading ban and learn some ways to
 0sakaCrypt is a virtual disk encryption software for Android which allows you to store your files in an encrypted container. It is a fork of [NeverCrypt](https://github.com/cobol56/nevercrypt), and NeverCrypt is a fork of EDS Lite, the open source edition of EDS. Visit the [EDS web site](https://sovworks.com/eds/) to learn about EDS features and capabilities.
 
 ## Features and limitation
+It's better to use this application with [GrapheneOS](https://grapheneos.org/)!
+
 Unlike NeverCrypt and EDS Lite, 0sakaCrypt focuses on working with VeraCrypt hidden volumes. It supports creating and opening hidden volumes, as well as protecting hidden volumes from accidental damage when data is written to the outer volume.
 
 Like NeverCrypt, 0sakaCrypt uses the Android Storage Access Framework to provide external applications with access to files stored inside encrypted containers.
